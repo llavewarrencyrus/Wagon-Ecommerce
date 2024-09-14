@@ -1,5 +1,5 @@
 import type { PropsWithChildren, ReactElement } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet, useColorScheme, Dimensions, View } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedRef,
@@ -7,7 +7,7 @@ import Animated, {
   useScrollViewOffset,
 } from 'react-native-reanimated';
 
-import { ThemedView } from '@/components/ThemedView';
+const { width } = Dimensions.get('window');
 
 const HEADER_HEIGHT = 250;
 
@@ -43,8 +43,13 @@ export default function ParallaxScrollView({
   });
 
   return (
-    <ThemedView style={styles.container}>
-      <Animated.ScrollView ref={scrollRef} scrollEventThrottle={16}>
+    <View style={styles.container}>
+      <Animated.ScrollView 
+      ref={scrollRef} 
+      scrollEventThrottle={16}
+      showsVerticalScrollIndicator={false} 
+      showsHorizontalScrollIndicator={false} 
+      >
         <Animated.View
           style={[
             styles.header,
@@ -53,9 +58,9 @@ export default function ParallaxScrollView({
           ]}>
           {headerImage}
         </Animated.View>
-        <ThemedView style={styles.content}>{children}</ThemedView>
+        <View style={styles.content}>{children}</View>
       </Animated.ScrollView>
-    </ThemedView>
+    </View>
   );
 }
 
@@ -64,12 +69,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    height: 250,
+    height: (width / 3) * 4,
     overflow: 'hidden',
   },
   content: {
     flex: 1,
-    padding: 32,
     gap: 16,
     overflow: 'hidden',
   },
