@@ -3,24 +3,14 @@ import { View, Image, Text, ScrollView, StyleSheet, Dimensions, Pressable } from
 import { useRouter } from 'expo-router';
 import { StarRatingDisplay } from 'react-native-star-rating-widget';
 import { Colors } from '@/constants/Colors';
+import { ProductCardProps } from '@/types/types';
 
 const { width } = Dimensions.get('window');
 
-interface ProductCardProps {
-  imageUri: { uri: string }[];
-  title: string;
-  price: string;
-  id: string;
-  discount?: string;
-  rating: number;
-}
-
-const calculateDiscountedPrice = (price: number, discount: string | undefined): number => {
+const calculateDiscountedPrice = (price: number, discount: number | undefined): number => {
   if (!discount) return price;
 
-  const discountValue = parseFloat(discount.replace('%', ''));
-
-  return price * (1 - discountValue / 100);
+  return price * (1 - discount / 100);
 };
 
 const ProductCard: React.FC<ProductCardProps> = ({ imageUri, title, price, id, discount, rating }) => {
@@ -30,18 +20,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ imageUri, title, price, id, d
   const priceNumber = parseFloat(price);
   const finalPrice = calculateDiscountedPrice(priceNumber, discount);
 
-  const onScroll = (event) => {
+  const onScroll = (event:any) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
     const index = Math.floor(contentOffsetX / width);
     setActiveIndex(index);
   };
 
-
   return (
     <View style={styles.productCard} >
       {discount ? (
         <View style={styles.discount}>
-          <Text style={{ color: 'white' }}>{discount} OFF</Text>
+          <Text style={{ color: 'white' }}>{discount}% OFF</Text>
         </View>
       ) : (
         <View></View>
@@ -57,7 +46,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ imageUri, title, price, id, d
         {imageUri.map((item, index) => (
           <View key={index} style={styles.imageContainer}>
             <Pressable onPress={() => router.push(`../ProductScreen?id=${id}`)}>
-              <Image source={item.uri} style={styles.productImage} />
+              <Image source={{uri: item}} style={styles.productImage} />
             </Pressable>
           </View>
         ))}
@@ -92,7 +81,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   productCard: {
-    width: '100%',
+    width: (width / 2)- 8,
     height: 'auto',
     marginBottom: 8,
     borderRadius: 10,
@@ -146,7 +135,7 @@ const styles = StyleSheet.create({
   originalPrice: {
     fontSize: 11,
     textAlignVertical: 'bottom',
-    color: Colors.secondary,
+    color: Colors.priceOriginal,
     textDecorationLine: 'line-through',
   },
   discountedPrice: {

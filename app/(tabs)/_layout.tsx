@@ -5,11 +5,12 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthContext';
 import { Colors } from '@/constants/Colors';
 import DummySearch from '@/components/DummySearch';
+import { ActivityIndicator, View, Dimensions, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
-import Index from '../Index';
+import { HomeScreen as Index } from '../Index';
 import Cart from '../Cart';
 import Category from '../Category';
-import Chat from '../Chat';
 import Account from '../Account';
 
 import SellerIndex from '../SellerIndex';
@@ -17,43 +18,59 @@ import SellerProducts from '../SellerProducts';
 import SellerMessages from '../SellerMessages';
 import SellerAccount from '../SellerAccount';
 
+const { width } = Dimensions.get('window');
+
 const Tab = createBottomTabNavigator();
 
 export default function TabLayout() {
+  
+
   const [isSeller, setIsSeller] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     const checkUser = async () => {
       setLoading(true);
-
-      const { data: userData, error } = await supabase.auth.getUser();
-      if (error) {
-
+      
+      // Check if there's a logged-in user
+      if (!isAuthenticated || !user) {
         setLoading(false);
         return;
       }
 
-      setIsSeller(userData?.user?.email === 'seller@wagon.com');
+      // Check if user is a seller
+      const { data: userData, error } = await supabase.auth.getUser();
+      if (!error && userData?.user?.email === 'seller@wagon.com') {
+        setIsSeller(true);
+      }
+
       setLoading(false);
     };
 
     checkUser();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
+  // Show loading indicator during authentication check
   if (loading) {
-    return null;
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={Colors.icon} />
+      </View>
+    );
   }
 
+  // Display UserLayoutTabs if not authenticated
   if (!isAuthenticated) {
     return <UserLayoutTabs />;
   }
 
+  // Display Seller or User Layout Tabs based on the user's type
   return isSeller ? <SellerLayoutTabs /> : <UserLayoutTabs />;
 }
 
 function UserLayoutTabs() {
+  const router = useRouter();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -71,10 +88,7 @@ function UserLayoutTabs() {
             case 'Cart':
               iconName = focused ? 'cart' : 'cart-outline';
               break;
-            case 'Chat':
-              iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-              break;  
-            case 'Account':
+            case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
               break;
             default:
@@ -84,25 +98,25 @@ function UserLayoutTabs() {
         },
         tabBarActiveTintColor: Colors.icon,
         tabBarInactiveTintColor: Colors.secondary,
-        tabBarStyle: {
-          height: 60,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          marginBottom: 10,
-        },
-        tabBarIconStyle: {
-          marginTop: 10,
-        },
+        tabBarStyle: { height: 60 },
+        tabBarLabelStyle: { fontSize: 12, marginBottom: 10 },
+        tabBarIconStyle: { marginTop: 10 },
       })}
     >
       <Tab.Screen name="Home" component={Index} options={{
-        headerTitle: () => <DummySearch />
+        headerTitle: () => <View style={{ width: width * 0.80 }}><DummySearch /></View>,
+        headerShadowVisible: false,
       }} />
-      <Tab.Screen name="Category" component={Category} />
+      <Tab.Screen name="Category" component={Category} options={{
+        headerTitle: () => <View style={{ width: width * 0.80 }}><DummySearch /></View>,
+        headerStyle: {
+          backgroundColor: 'white',
+        },
+        headerShadowVisible: false,
+        headerRight: () => <TouchableOpacity onPress={() => router.navigate('../Chat')} style={{ backgroundColor: Colors.tertiary, padding: 5, marginRight:15, borderRadius: 20 }}><Ionicons name="chatbubbles-outline" size={24} color="black" /></TouchableOpacity>,
+      }}/>
       <Tab.Screen name="Cart" component={Cart} />
-      <Tab.Screen name="Chat" component={Chat} />
-      <Tab.Screen name="Account" component={Account} />
+      <Tab.Screen name="Profile" component={Account} options={{ headerShadowVisible: false }} />
     </Tab.Navigator>
   );
 }
@@ -120,7 +134,7 @@ function SellerLayoutTabs() {
               iconName = focused ? 'home' : 'home-outline';
               break;
             case 'Products':
-              iconName = focused ? 'bag-handle' : 'bag-handle';
+              iconName = focused ? 'bag-handle' : 'bag-handle-outline';
               break;
             case 'Messages':
               iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
@@ -135,19 +149,12 @@ function SellerLayoutTabs() {
         },
         tabBarActiveTintColor: Colors.icon,
         tabBarInactiveTintColor: Colors.secondary,
-        tabBarStyle: {
-          height: 60,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          marginBottom: 10,
-        },
-        tabBarIconStyle: {
-          marginTop: 10,
-        },
+        tabBarStyle: { height: 60 },
+        tabBarLabelStyle: { fontSize: 12, marginBottom: 10 },
+        tabBarIconStyle: { marginTop: 10 },
       })}
     >
-      <Tab.Screen name="Home" component={SellerIndex} options={{headerShown: true}}/>
+      <Tab.Screen name="Home" component={SellerIndex} options={{ headerShown: true }} />
       <Tab.Screen name="Products" component={SellerProducts} />
       <Tab.Screen name="Messages" component={SellerMessages} />
       <Tab.Screen name="Account" component={SellerAccount} />

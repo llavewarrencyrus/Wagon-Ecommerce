@@ -1,21 +1,24 @@
-import React from 'react';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { View, Dimensions } from 'react-native';
-import { useFonts } from 'expo-font';
-import { Stack, Tabs } from 'expo-router';
+import React, { useEffect } from 'react';
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { View, Dimensions, SafeAreaView, TouchableOpacity } from 'react-native';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { AuthProvider } from '../components/AuthContext';
+import { NetworkProvider } from '../components/NetworkContext';
+import { useRouter } from 'expo-router';
+import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import DummySearchBar from '@/components/DummySearch';
-/*import { AuthProvider } from '@/provider/AuthProvider';*/
+import { useFonts } from 'expo-font';
+import DummySearch from '@/components/DummySearch';
 
 SplashScreen.preventAutoHideAsync();
 
 const { width } = Dimensions.get('window');
 
 export default function RootLayout() {
+  const router = useRouter();
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -33,22 +36,74 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
+
       <ThemeProvider value={DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{headerShown: false}}/>
-          <Stack.Screen name="LoginScreen" options={{ headerShown: false}}/>
-          <Stack.Screen name="+not-found" />
-          <Stack.Screen name="Account" />
-          <Stack.Screen name="SignupScreen" options={{ headerShown: false }}/>
-          <Stack.Screen name="ProductScreen" options={{
-            headerTitle: () => <View style={{width: width * 0.75}}><DummySearchBar/></View>,
-            headerStyle: {
-              backgroundColor: 'white',
-            },
-          }}/>
-          <Stack.Screen name="SearchScreen" />
-          <Stack.Screen name="UnderConstruction" />
-        </Stack>
+        <SafeAreaView style={{ flex: 1 }}>
+          <NetworkProvider>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="Category" />
+              <Stack.Screen name="Cart" />
+              <Stack.Screen name="Chat" />
+              <Stack.Screen name="LoginScreen" />
+              <Stack.Screen name="+not-found" />
+              <Stack.Screen name="Account" />
+              <Stack.Screen name="SignupScreen" options={{animation: 'fade'}}/>
+              <Stack.Screen name="ProductScreen" options={{
+                headerTitle: ' ',
+                headerTransparent: true,
+                headerBackVisible: false,
+                headerLeft: () => (
+                  <TouchableOpacity
+                    onPress={() => router.back()}
+                    style={{
+                      backgroundColor: Colors.tertiary,
+                      padding: 5,
+                      marginRight: 25,
+                      borderRadius: 20,
+                    }}
+                  >
+                    <AntDesign name="arrowleft" size={24} color="black" />
+                  </TouchableOpacity>
+                ),
+                headerRight: () => (
+                  <TouchableOpacity
+                    onPress={() => router.navigate('../Cart')}
+                    style={{ backgroundColor: Colors.tertiary, padding: 5, borderRadius: 20 }}
+                  >
+                    <Ionicons name="cart-outline" size={24} color="black" />
+                  </TouchableOpacity>
+                ),
+              }} />
+              <Stack.Screen name="SearchScreen" options={{
+                headerBackVisible: false,
+                headerLeft: () => <TouchableOpacity onPress={() => router.back()} style={{ padding: 5, marginRight: 25, borderRadius: 20 }}><AntDesign name="arrowleft" size={24} color="black" /></TouchableOpacity>,
+                animation: 'fade'
+
+              }} />
+              <Stack.Screen name="ResultScreen" />
+              <Stack.Screen name="EditProfileScreen" options={{
+                title: 'Edit Profile',
+                headerShadowVisible: false
+              }} />
+              <Stack.Screen name="NewArrival" options={{
+                headerTitle: '',
+                headerLeft: () => <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: Colors.tertiary, padding: 5, marginRight: 25, borderRadius: 20 }}><AntDesign name="arrowleft" size={24} color="black" /></TouchableOpacity>,
+                headerTransparent: true
+              }} />
+              <Stack.Screen name="TopSales" options={{
+                headerTitle: '',
+                headerLeft: () => <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: Colors.tertiary, padding: 5, marginRight: 25, borderRadius: 20 }}><AntDesign name="arrowleft" size={24} color="black" /></TouchableOpacity>,
+                headerTransparent: true
+              }} />
+              <Stack.Screen name="HelpCenter" />
+              <Stack.Screen name="CurrentPasswordScreen" options={{headerTitle: 'Current Password'}}/>
+              <Stack.Screen name="ChangePasswordScreen" options={{headerTitle: 'Change Password'}}/>
+              <Stack.Screen name="UnderConstruction" />
+              
+            </Stack>
+          </NetworkProvider>
+        </SafeAreaView>
       </ThemeProvider>
     </AuthProvider>
   );

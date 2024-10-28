@@ -1,21 +1,33 @@
-// SearchBar.tsx
-import React, { useState, useEffect } from 'react';
-import { ScrollView, View, TextInput, FlatList, Text, StyleSheet, TouchableOpacity, Dimensions, Pressable } from 'react-native';
-import { useRouter} from 'expo-router';
-import { searchKeywords } from '@/components/searchKeywords';
-import { Stack } from 'expo-router';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, TextInput, FlatList, Text, StyleSheet, TouchableOpacity, Dimensions, Pressable } from 'react-native';
+
+import { useRouter, Stack } from 'expo-router';
+import { useIsFocused, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
+import { searchKeywords } from '@/components/searchKeywords';
 import { Colors } from '@/constants/Colors';
+import { SearchScreenProp } from '@/types/types';
 
 
 const SearchScreen: React.FC = () => {
   const { width } = Dimensions.get('window');
-  const [query, setQuery] = useState<string>('');
+  const [query, setQuery] = useState<string | ''>('');
   const [filteredKeywords, setFilteredKeywords] = useState<string[]>([]);
   const [recentKeywords, setRecentKeywords] = useState<string[]>([]);
+  const searchInputRef = useRef<TextInput | null>(null);
+
+  const onPageLayout = useCallback(() => searchInputRef.current?.focus(), []);
+
+  const [clear, setClear] = useState(false);
+
+  const route = useRoute<SearchScreenProp>();
+  const { value } = route.params;
 
   const router = useRouter();
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     const loadRecentKeywords = async () => {
@@ -31,6 +43,24 @@ const SearchScreen: React.FC = () => {
 
     loadRecentKeywords();
   }, []);
+
+  useEffect(() => {
+    if (searchInputRef.current && isFocused) {
+      searchInputRef.current.focus();
+    }
+  }, [isFocused]);
+
+  useEffect(() => {
+    if (value !== undefined && value !== 'undefined') {
+      setQuery(value);
+    }else{
+      setClear(true);
+    }
+  }, [value]);
+
+  const suggestSearch = [
+    'Summer Dresses', 'Casual Wear', 'Athleisure', 'Formal Attire', 'Winter Jackets', 'Puff Sleeve Midi Dress', 'Slim Fit Jeans', 'Graphic Tees', 'Leather Jackets', 'Maxi Skirts', 'Cozy Sweaters', 'Beachwear', 'Raincoats', 'Party Outfits', 'Swimwear', 'Sneakers'
+  ]
 
   const handleChangeText = (text: string) => {
     setQuery(text);
@@ -54,8 +84,7 @@ const SearchScreen: React.FC = () => {
     } catch (error) {
       console.error('Failed to save recent keywords:', error);
     }
-    router.push(`../UnderConstruction`);
-    //router.push(`../Result?keyword=${keyword}`);
+    router.navigate(`../ResultScreen?keyword=${keyword}`);
   };
 
   const handleSubmitEditing = () => {
@@ -72,6 +101,12 @@ const SearchScreen: React.FC = () => {
       console.error('Failed to clear recent keywords:', error);
     }
   };
+
+  const handleOnFocus = () => {
+    if (clear) {
+      searchInputRef.current?.clear()
+    }
+  }
 
   const renderHighlightedText = (item: string) => {
     const index = item.toLowerCase().indexOf(query.toLowerCase());
@@ -96,15 +131,19 @@ const SearchScreen: React.FC = () => {
     <>
       <Stack.Screen options={{
         headerTitle: () =>
-          <View style={{ width: width * 0.75 }}>
+          <View onLayout={onPageLayout} style={{ width: width * 0.75 }}>
             <View style={styles.containerInp}>
               <View style={styles.inputContainer}>
                 <TextInput
+                  ref={searchInputRef}
+                  autoFocus={true}
                   style={styles.input}
                   placeholder="Search..."
                   value={query}
                   onChangeText={handleChangeText}
                   onSubmitEditing={handleSubmitEditing}
+                  cursorColor={Colors.text}
+                  onFocus={handleOnFocus}
                 />
                 <Pressable onPress={handleSubmitEditing}>
                   <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
@@ -132,27 +171,40 @@ const SearchScreen: React.FC = () => {
             style={styles.suggestionList}
           />
         )}
+
         {recentKeywords.length > 0 && (
           <View>
-            <View style={{flexDirection:'row', justifyContent:'space-between', height: 50, paddingHorizontal:20}}>
-              <Text style={styles.recent}>Recent Search:</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 3 }}>
+              <Text style={styles.recent}>Recently Search</Text>
               <TouchableOpacity onPress={handleClearRecentSearches} style={styles.clearButton}>
-                <Ionicons name='trash-outline' size={20} color={Colors.secondary}/>
+                <Ionicons name='trash-outline' size={20} color={Colors.secondary} style={{ position: 'absolute', right: 10 }} />
               </TouchableOpacity>
             </View>
             <View style={styles.recentItemContainer}>
-                {recentKeywords.map((item, index) => (
-                  <TouchableOpacity key={index} onPress={() => handleSelectKeyword(item)}>
-                    <View style={styles.recentItem}>
-                      <Text style={{color: '#fff'}}>{item}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
+              {recentKeywords.map((item, index) => (
+                <TouchableOpacity key={index} onPress={() => handleSelectKeyword(item)}>
+                  <View style={styles.recentItem}>
+                    <Text style={{ color: '#fff' }}>{item}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
             </View>
-
-            
           </View>
         )}
+        <View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 3 }}>
+            <Text style={styles.recent}>Discover</Text>
+          </View>
+          <View style={styles.recentItemContainer}>
+            {suggestSearch.map((item, index) => (
+              <TouchableOpacity key={index} onPress={() => handleSelectKeyword(item)}>
+                <View style={styles.recentItem}>
+                  <Text style={{ color: '#fff' }}>{item}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
       </View>
     </>
   );
@@ -222,18 +274,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 'auto',
   },
-  recent:{
-    marginVertical: 'auto',
+  recent: {
+    fontSize: 18,
+    color: Colors.text,
+    fontWeight: 'bold'
   },
-  recentItem:{
-    margin: 6,
+  recentItem: {
+    margin: 3,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: Colors.primary,
+    borderRadius: 4,
+    backgroundColor: Colors.selectHighlight,
   },
-  recentItemContainer :{
-    flexDirection:'row',
+  recentItemContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap'
   }
 });
 

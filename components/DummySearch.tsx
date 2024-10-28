@@ -1,17 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, TextInput, View, StyleSheet, Dimensions } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from '@expo/vector-icons'; // Import icon library
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
+import { DummySearch } from "@/types/types";
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
-const DummySearchBar = () => {
+const DummySearchBar: React.FC<DummySearch> = ({ value }) => {
   const router = useRouter();
+  const navigation = useNavigation();
 
   const goToSearchScreen = () => {
-    router.push(`../SearchScreen`);
+    router.push(`../SearchScreen?value=${value}`);
   };
+
+  
 
   return (
     <View style={styles.container}>
@@ -20,6 +25,7 @@ const DummySearchBar = () => {
           style={styles.input}
           placeholder="Search..."
           editable={false}
+          value={value}
         />
         <Ionicons name="search" size={20} style={styles.searchIcon} />
       </Pressable>
@@ -46,8 +52,7 @@ const styles = StyleSheet.create({
   input: {
     height: 40,
     flex: 1,
-    color: Colors.secondary,
-
+    color: 'black',
   },
   searchIcon: {
     backgroundColor: Colors.button,
