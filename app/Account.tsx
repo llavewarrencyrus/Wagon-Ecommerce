@@ -123,7 +123,7 @@ export default function Account() {
         <Text style={styles.profileEmail}>{email}</Text>
       </View>
       <View style={styles.optionsContainer}>
-        <TouchableOpacity onPress={() => router.navigate('../Index')} style={styles.optionItem}>
+        <TouchableOpacity onPress={() => router.navigate('../UnderConstruction')} style={styles.optionItem}>
           <View style={styles.option}>
             <View style={styles.optionApart}>
               <SimpleLineIcons name="bag" size={24} color="#333" />
@@ -141,7 +141,7 @@ export default function Account() {
             <Entypo name="chevron-right" size={24} color="#333" />
           </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.navigate('../Index')} style={styles.optionItem}>
+        <TouchableOpacity onPress={() => router.navigate('../UnderConstruction')} style={styles.optionItem}>
           <View style={styles.option}>
             <View style={styles.optionApart}>
               <SimpleLineIcons name="location-pin" size={24} color="#333" />
