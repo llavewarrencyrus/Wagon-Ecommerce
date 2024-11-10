@@ -19,7 +19,6 @@ interface User {
 }
 
 const EditProfileScreen = () => {
-  const [fullName, setFullName] = useState('');
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');

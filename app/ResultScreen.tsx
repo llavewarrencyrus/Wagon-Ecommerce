@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 import { View, Text, Dimensions, Pressable, StyleSheet, Image, Button } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useIsFocused } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import LottieView from 'lottie-react-native';
 
 import { getProducts } from '@/data/data';
@@ -35,13 +34,19 @@ function Result() {
     const [results, setResults] = useState<Product[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const [selectedSort, setSelectedSort] = useState<"relevance" | "latest" | "topSales" | "priceAsc" | "priceDesc" | undefined>('relevance');
+    const [isSorting, setIsSorting] = useState(false);
+
+    const [selectedSort, setSelectedSort] = useState<"relevance" | "latest" | "topSales" | "priceAsc" | "priceDesc" | ' '>(' ');
     const [selectedSortOrder, setSelectedSortOrder] = useState<string>('asc');
     const [priceIcon, setPriceIcon] = useState(faSort);
     const [iconColor, setIconColor] = useState(Colors.tertiary);
 
     const route = useRoute<ProductScreenRouteProp>();
-    const { keyword, category } = route.params;
+
+    const [keyword, setKeyword] = useState<string>('');
+    const [category, setCategory] = useState<string>('');
+
+    const isFocused = useIsFocused();
 
     const sortBy = [
         { label: 'Relevance', value: 'relevance' },
@@ -52,27 +57,38 @@ function Result() {
     const categoriesArray = Array.isArray(category) ? category : category?.split(',');
 
     const fetchResults = async () => {
-        setLoading(true);
+        if(!isSorting) setLoading(true);
         const fetchedProducts = await getProducts({ searchTerm: keyword, sortBy: selectedSort, category: category });
         setResults(fetchedProducts);
         setLoading(false);
+        setIsSorting(false);
     };
 
     useEffect(() => {
-        fetchResults()
-    }, []);
+        const { keyword, category } = route.params;
+
+        setKeyword(keyword);
+        setCategory(category);
+    }, [isFocused, route.params]);
 
     useEffect(() => {
-        fetchResults()
-    }, [selectedSort]);
+        if (keyword || category) {
+            
+            fetchResults();
+
+            
+            
+        }
+    }, [keyword, category, selectedSort]);
 
     const handleSortSelected = (selectedValues: any) => {
+        setIsSorting(true);
         if (selectedValues == 'price') {
             if (selectedSortOrder == 'asc') {
                 setSelectedSort('priceAsc');
                 setSelectedSortOrder('desc');
                 setPriceIcon(faSortUp);
-                
+
             } else {
                 setSelectedSortOrder('asc');
                 setSelectedSort('priceDesc');
@@ -87,7 +103,7 @@ function Result() {
     };
 
     const getRelevanceBtnStyle = () => ({
-        color: selectedSort === 'relevance' ? Colors.title : Colors.tertiary,
+        color: selectedSort === 'relevance' || selectedSort === ' ' ? Colors.title : Colors.tertiary,
     });
     const getLatestBtnStyle = () => ({
         color: selectedSort === 'latest' ? Colors.title : Colors.tertiary,
@@ -126,24 +142,27 @@ function Result() {
                 },
                 headerShadowVisible: false,
             }} />
-            {!loading ? (<>
-
-                <View style={{ flex: 1 }}>
-                    <View style={styles.sortWrapper}>
-                        <Pressable onPress={() => handleSortSelected('relevance')}>
-                            <Text style={[styles.sortBtn, getRelevanceBtnStyle()]}>Relevance</Text>
-                        </Pressable>
-                        <Pressable onPress={() => handleSortSelected('latest')}>
-                            <Text style={[styles.sortBtn, getLatestBtnStyle()]}>Latest</Text>
-                        </Pressable>
-                        <Pressable onPress={() => handleSortSelected('price')}>
-                            <Text style={[styles.sortBtn, getPriceBtnStyle()]}>Price <FontAwesomeIcon icon={priceIcon} color={iconColor}/></Text>
-                        </Pressable>
+            {!loading ? (
+                <>
+                    <View style={{ flex: 1 }}>
+                        <View style={styles.sortWrapper}>
+                            <Pressable onPress={() => handleSortSelected('relevance')}>
+                                <Text style={[styles.sortBtn, getRelevanceBtnStyle()]}>Relevance</Text>
+                            </Pressable>
+                            <Pressable onPress={() => handleSortSelected('latest')}>
+                                <Text style={[styles.sortBtn, getLatestBtnStyle()]}>Latest</Text>
+                            </Pressable>
+                            <Pressable onPress={() => handleSortSelected('price')}>
+                                <Text style={[styles.sortBtn, getPriceBtnStyle()]}>Price <FontAwesomeIcon icon={priceIcon} color={iconColor} /></Text>
+                            </Pressable>
+                        </View>
+                        <ProductList
+                            products={results}
+                        />
+                        {isSorting ? <View style={{ position: 'absolute', width: width, height: '100%', backgroundColor: 'rgba(248,248,248,0.4)' }}></View> : null}
                     </View>
-                    <ProductList
-                        products={results}
-                    />
-                </View></>) : (
+                </>
+            ) : (
                 <LottieView
                     autoPlay
                     source={require('../assets/loader/load.json')}

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigation } from "expo-router";
 import { StyleSheet, Button, Text, View, Alert } from 'react-native';
 import { supabase } from '@/lib/supabase'; // Import supabase instance
-import { useAuth } from '@/components/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import React from 'react';
 
 export default function SellerAccount() {

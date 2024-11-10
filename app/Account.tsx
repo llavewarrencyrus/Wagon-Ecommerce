@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigation, useRouter } from "expo-router";
 import { ActivityIndicator, InteractionManager, StyleSheet, Image, Text, View, Alert, TouchableOpacity, Modal, RefreshControl, ScrollView } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/components/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/Colors';
 import { useIsFocused } from '@react-navigation/native';
 import { Entypo, Octicons, FontAwesome5, MaterialIcons, Ionicons, SimpleLineIcons } from '@expo/vector-icons';
@@ -78,11 +78,6 @@ export default function Account() {
     setLoggingOut(true);
     try {
       logout();
-      InteractionManager.runAfterInteractions(() => {
-        setTimeout(() => {
-          router.navigate('/');
-        }, 10000);
-      });
     } catch (error) {
       console.error('Logout Error:', error);
       Alert.alert('Logout Error', 'There was a problem logging out.');

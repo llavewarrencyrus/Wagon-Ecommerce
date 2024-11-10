@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/components/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/Colors';
 import DummySearch from '@/components/DummySearch';
 import { ActivityIndicator, View, Dimensions, TouchableOpacity } from 'react-native';

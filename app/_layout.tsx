@@ -5,13 +5,14 @@ import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
-import { AuthProvider } from '../components/AuthContext';
+import { AuthProvider } from '../context/AuthContext';
 import { NetworkProvider } from '../components/NetworkContext';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useFonts } from 'expo-font';
 import DummySearch from '@/components/DummySearch';
+import { CartProvider } from '@/context/CartProvider';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,72 +37,73 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-
       <ThemeProvider value={DefaultTheme}>
         <SafeAreaView style={{ flex: 1 }}>
           <NetworkProvider>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="Category" />
-              <Stack.Screen name="Cart" />
-              <Stack.Screen name="Chat" />
-              <Stack.Screen name="LoginScreen" />
-              <Stack.Screen name="+not-found" />
-              <Stack.Screen name="Account" />
-              <Stack.Screen name="SignupScreen" options={{animation: 'fade'}}/>
-              <Stack.Screen name="ProductScreen" options={{
-                headerTitle: ' ',
-                headerTransparent: true,
-                headerBackVisible: false,
-                headerLeft: () => (
-                  <TouchableOpacity
-                    onPress={() => router.back()}
-                    style={{
-                      backgroundColor: Colors.tertiary,
-                      padding: 5,
-                      marginRight: 25,
-                      borderRadius: 20,
-                    }}
-                  >
-                    <AntDesign name="arrowleft" size={24} color="black" />
-                  </TouchableOpacity>
-                ),
-                headerRight: () => (
-                  <TouchableOpacity
-                    onPress={() => router.navigate('../Cart')}
-                    style={{ backgroundColor: Colors.tertiary, padding: 5, borderRadius: 20 }}
-                  >
-                    <Ionicons name="cart-outline" size={24} color="black" />
-                  </TouchableOpacity>
-                ),
-              }} />
-              <Stack.Screen name="SearchScreen" options={{
-                headerBackVisible: false,
-                headerLeft: () => <TouchableOpacity onPress={() => router.back()} style={{ padding: 5, marginRight: 25, borderRadius: 20 }}><AntDesign name="arrowleft" size={24} color="black" /></TouchableOpacity>,
-                animation: 'fade'
+            <CartProvider>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="Category" />
+                <Stack.Screen name="Cart" />
+                <Stack.Screen name="Chat" />
+                <Stack.Screen name="LoginScreen" />
+                <Stack.Screen name="+not-found" />
+                <Stack.Screen name="Account" />
+                <Stack.Screen name="SignupScreen" options={{ animation: 'fade' }} />
+                <Stack.Screen name="ProductScreen" options={{
+                  headerTitle: ' ',
+                  headerTransparent: true,
+                  headerBackVisible: false,
+                  headerLeft: () => (
+                    <TouchableOpacity
+                      onPress={() => router.back()}
+                      style={{
+                        backgroundColor: Colors.tertiary,
+                        padding: 5,
+                        marginRight: 25,
+                        borderRadius: 20,
+                      }}
+                    >
+                      <AntDesign name="arrowleft" size={24} color="black" />
+                    </TouchableOpacity>
+                  ),
+                  headerRight: () => (
+                    <TouchableOpacity
+                      onPress={() => router.navigate('../Cart')}
+                      style={{ backgroundColor: Colors.tertiary, padding: 5, borderRadius: 20 }}
+                    >
+                      <Ionicons name="cart-outline" size={24} color="black" />
+                    </TouchableOpacity>
+                  ),
+                }} />
+                <Stack.Screen name="SearchScreen" options={{
+                  headerBackVisible: false,
+                  headerLeft: () => <TouchableOpacity onPress={() => router.back()} style={{ padding: 5, marginRight: 25, borderRadius: 20 }}><AntDesign name="arrowleft" size={24} color="black" /></TouchableOpacity>,
+                  animation: 'fade'
 
-              }} />
-              <Stack.Screen name="ResultScreen" />
-              <Stack.Screen name="EditProfileScreen" options={{
-                title: 'Edit Profile',
-                headerShadowVisible: false
-              }} />
-              <Stack.Screen name="NewArrival" options={{
-                headerTitle: '',
-                headerLeft: () => <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: Colors.tertiary, padding: 5, marginRight: 25, borderRadius: 20 }}><AntDesign name="arrowleft" size={24} color="black" /></TouchableOpacity>,
-                headerTransparent: true
-              }} />
-              <Stack.Screen name="TopSales" options={{
-                headerTitle: '',
-                headerLeft: () => <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: Colors.tertiary, padding: 5, marginRight: 25, borderRadius: 20 }}><AntDesign name="arrowleft" size={24} color="black" /></TouchableOpacity>,
-                headerTransparent: true
-              }} />
-              <Stack.Screen name="HelpCenter" />
-              <Stack.Screen name="CurrentPasswordScreen" options={{headerTitle: 'Current Password'}}/>
-              <Stack.Screen name="ChangePasswordScreen" options={{headerTitle: 'Change Password'}}/>
-              <Stack.Screen name="UnderConstruction" />
-              
-            </Stack>
+                }} />
+                <Stack.Screen name="ResultScreen" />
+                <Stack.Screen name="EditProfileScreen" options={{
+                  title: 'Edit Profile',
+                  headerShadowVisible: false
+                }} />
+                <Stack.Screen name="NewArrival" options={{
+                  headerTitle: '',
+                  headerLeft: () => <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: Colors.tertiary, padding: 5, marginRight: 25, borderRadius: 20 }}><AntDesign name="arrowleft" size={24} color="black" /></TouchableOpacity>,
+                  headerTransparent: true
+                }} />
+                <Stack.Screen name="TopSales" options={{
+                  headerTitle: '',
+                  headerLeft: () => <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: Colors.tertiary, padding: 5, marginRight: 25, borderRadius: 20 }}><AntDesign name="arrowleft" size={24} color="black" /></TouchableOpacity>,
+                  headerTransparent: true
+                }} />
+                <Stack.Screen name="HelpCenter" />
+                <Stack.Screen name="CurrentPasswordScreen" options={{ headerTitle: 'Current Password' }} />
+                <Stack.Screen name="ChangePasswordScreen" options={{ headerTitle: 'Change Password' }} />
+                <Stack.Screen name="CheckOut" />
+                <Stack.Screen name="UnderConstruction" />
+              </Stack>
+            </CartProvider>
           </NetworkProvider>
         </SafeAreaView>
       </ThemeProvider>

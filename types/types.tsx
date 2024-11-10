@@ -19,6 +19,7 @@ export interface Product {
   sales_count: number;
   product_material: Array<string>;
   product_variant: {
+    variant_id: string
     product_color: {
       color: string;
       image: string;
@@ -34,7 +35,7 @@ export interface Product {
 export interface ProductCardProps {
   imageUri: Array<string>;
   title: string;
-  price: string;
+  price: number;
   id: string;
   discount?: number;
   rating: number;
@@ -67,6 +68,40 @@ export interface Step1InsertProductProps {
   }) => void;
 }
 
+export interface ProductPreviewProps {
+  setProductPrice: (price: number) => void;
+  setDiscountedPrice: (price: number) => void;
+  product: Product;
+}
+
+export interface CartItemProps {
+  cart_id: string;
+  variant_id: string;
+  user_id: string;
+  product_variant: {
+    product_id: string;
+    products:{
+      product_name: string;
+      product_price: number;
+      product_discount: number;
+    };
+    product_size:{
+      id: string;
+      size: string;
+      dimension: string;
+      product_id: string;
+    };
+    product_color:{
+      id: string;
+      color: string;
+      image: string;
+      product_id: string; 
+    };
+    product_quantity: number;
+  };
+  quantity:number;
+}
+
 //Types
 export type RootStackParamList = {
   Home: undefined;
@@ -74,12 +109,15 @@ export type RootStackParamList = {
   ProductList: {products: Array<Product>};
   SellerMessages: undefined;
   SellerChat: { senderId: string };
-  Search: {value?: string}
+  Search: {value?: string};
+  Refresh: {refresh?: boolean};
 };
 
 export type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 export type SearchScreenProp = RouteProp<RootStackParamList, 'Search'>;
+
+export type RefreshScreenProp = RouteProp<RootStackParamList, 'Refresh'>;
 
 export type ProductScreenRouteProp = RouteProp<RootStackParamList, 'Product'>;
 

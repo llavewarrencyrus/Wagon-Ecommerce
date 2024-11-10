@@ -6,7 +6,6 @@ import { useNavigation, useIsFocused } from '@react-navigation/native';
 import ProductCard from '@/components/ProductCard';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
-import { supabase } from '@/lib/supabase';
 import { getProducts } from '@/data/data';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -214,6 +213,7 @@ export function HomeScreen() {
         { useNativeDriver: false }
       )}
       scrollEventThrottle={16}
+      showsVerticalScrollIndicator={false}
       data={products}
       numColumns={2}
       keyExtractor={(item) => item.id}

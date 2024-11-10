@@ -3,14 +3,12 @@ import { View, TextInput, FlatList, Text, StyleSheet, TouchableOpacity, Dimensio
 
 import { useRouter, Stack } from 'expo-router';
 import { useIsFocused, useRoute } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 
 import { searchKeywords } from '@/components/searchKeywords';
 import { Colors } from '@/constants/Colors';
 import { SearchScreenProp } from '@/types/types';
-
 
 const SearchScreen: React.FC = () => {
   const { width } = Dimensions.get('window');
@@ -18,6 +16,9 @@ const SearchScreen: React.FC = () => {
   const [filteredKeywords, setFilteredKeywords] = useState<string[]>([]);
   const [recentKeywords, setRecentKeywords] = useState<string[]>([]);
   const searchInputRef = useRef<TextInput | null>(null);
+
+  const [showAll, setShowAll] = useState(false);
+  const [discoverAll, setDiscoverAll] = useState(false);
 
   const onPageLayout = useCallback(() => searchInputRef.current?.focus(), []);
 
@@ -53,7 +54,7 @@ const SearchScreen: React.FC = () => {
   useEffect(() => {
     if (value !== undefined && value !== 'undefined') {
       setQuery(value);
-    }else{
+    } else {
       setClear(true);
     }
   }, [value]);
@@ -102,9 +103,18 @@ const SearchScreen: React.FC = () => {
     }
   };
 
+  const handleToggleShowAll = () => {
+    setShowAll(!showAll);
+  };
+
+  const handleToggleDiscoverAll = () => {
+    setDiscoverAll(!discoverAll);
+  };
+
   const handleOnFocus = () => {
     if (clear) {
-      searchInputRef.current?.clear()
+      searchInputRef.current?.clear();
+      setQuery('');
     }
   }
 
@@ -173,22 +183,32 @@ const SearchScreen: React.FC = () => {
         )}
 
         {recentKeywords.length > 0 && (
-          <View>
+          <View style={{paddingTop: 10}}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, paddingHorizontal: 3 }}>
-              <Text style={styles.recent}>Recently Search</Text>
+              <Text style={styles.recent}>Recently Searched</Text>
               <TouchableOpacity onPress={handleClearRecentSearches} style={styles.clearButton}>
                 <Ionicons name='trash-outline' size={20} color={Colors.secondary} style={{ position: 'absolute', right: 10 }} />
               </TouchableOpacity>
             </View>
+
             <View style={styles.recentItemContainer}>
-              {recentKeywords.map((item, index) => (
+              {(showAll ? recentKeywords : recentKeywords.slice(0, 10)).map((item, index) => (
                 <TouchableOpacity key={index} onPress={() => handleSelectKeyword(item)}>
                   <View style={styles.recentItem}>
                     <Text style={{ color: '#fff' }}>{item}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
+              {recentKeywords.length > 10 && (
+                <TouchableOpacity onPress={handleToggleShowAll} style={styles.showMoreButton}>
+                  <Text style={{ color: Colors.primary }}>
+                    {showAll ? <>Less <AntDesign name="up" size={12} color={Colors.button}/></> : <>More <AntDesign name="down" size={12} color={Colors.button}/></>}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
+
+
           </View>
         )}
         <View>
@@ -196,13 +216,20 @@ const SearchScreen: React.FC = () => {
             <Text style={styles.recent}>Discover</Text>
           </View>
           <View style={styles.recentItemContainer}>
-            {suggestSearch.map((item, index) => (
+            {(discoverAll ? suggestSearch : suggestSearch.slice(0, 10)).map((item, index) => (
               <TouchableOpacity key={index} onPress={() => handleSelectKeyword(item)}>
                 <View style={styles.recentItem}>
                   <Text style={{ color: '#fff' }}>{item}</Text>
                 </View>
               </TouchableOpacity>
             ))}
+            {suggestSearch.length > 10 && (
+                <TouchableOpacity onPress={handleToggleDiscoverAll} style={styles.showMoreButton}>
+                  <Text style={{ color: Colors.primary }}>
+                    {discoverAll ? <>Less <AntDesign name="up" size={12} color={Colors.button}/></> : <>More <AntDesign name="down" size={12} color={Colors.button}/></>}
+                  </Text>
+                </TouchableOpacity>
+              )}
           </View>
         </View>
       </View>
@@ -289,6 +316,10 @@ const styles = StyleSheet.create({
   recentItemContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap'
+  },
+  showMoreButton: {
+    justifyContent:'center',
+    marginHorizontal: 10
   }
 });
 

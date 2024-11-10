@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity, ScrollView, TextInput, Alert,
 import { Colors } from '@/constants/Colors';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/components/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import React, { useState } from 'react';
@@ -67,14 +67,14 @@ const LoginScreen = () => {
   return (
     <>
       <ImageBackground
-        source={require('@/assets/images/backDrop.jpg')} // Image path
+        source={require('@/assets/images/backDrop.jpg')} 
         style={styles.backgroundImage}
-        resizeMode="cover" // Or "contain", "stretch", etc.
+        resizeMode="cover" 
       >
         <LinearGradient
-          colors={['#8B4513', '#D2B48C', 'transparent']} // Warm brown to light tan to transparent
-          start={{ x: 0.3, y: 0 }}  // Start of gradient at top left
-          end={{ x: 0.7, y: 0.6 }}  // End of gradient angled to the middle part of the screen
+          colors={['#8B4513', '#D2B48C', 'transparent']} 
+          start={{ x: 0.3, y: 0 }}  
+          end={{ x: 0.7, y: 0.6 }}  
           style={styles.gradientOverlay}
         />
         <Stack.Screen options={{

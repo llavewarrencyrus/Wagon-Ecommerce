@@ -17,7 +17,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ imageUri, title, price, id, d
   const [activeIndex, setActiveIndex] = useState(0);
   const router = useRouter();
 
-  const priceNumber = parseFloat(price);
+  const priceNumber = price;
   const finalPrice = calculateDiscountedPrice(priceNumber, discount);
 
   const onScroll = (event:any) => {
@@ -61,7 +61,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ imageUri, title, price, id, d
           </View>
           {discount ? (
             <View >
-              <Text style={styles.discountedPrice}>₱{finalPrice.toFixed(2)}</Text>
+              <Text style={styles.discountedPrice}> {finalPrice.toFixed(2)}</Text>
               <Text style={styles.originalPrice}>₱{priceNumber.toFixed(2)}</Text>
             </View>
           ) : (

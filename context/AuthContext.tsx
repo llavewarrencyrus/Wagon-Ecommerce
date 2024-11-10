@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: { id: string; username: string; address: string; email: string } | null;
+  user: { id: string; email: string } | null;
   login: (user: { id: string; email: string }) => void;
   logout: () => void;
 }
@@ -12,7 +12,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<{ id: string; username: string; address: string; email: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
 
   // Load user session from AsyncStorage when the app starts
   useEffect(() => {
@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Login and save session to AsyncStorage
   const login = async (user: { id: string; email: string }) => {
-    const completeUser = { ...user, username: 'DefaultUsername', address: 'DefaultAddress' }; // add defaults
+    const completeUser = { ...user }; // add defaults
     setIsAuthenticated(true);
     setUser(completeUser);
     await AsyncStorage.setItem('user', JSON.stringify(completeUser)); // Save user session
