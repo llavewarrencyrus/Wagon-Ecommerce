@@ -52,8 +52,6 @@ const EditProfileScreen = () => {
         throw error;
       }
 
-      console.log(data.profile_picture),
-
       setUserData(data);
       setNickname(data.username);
       setEmail(data.email);

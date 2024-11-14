@@ -9,19 +9,21 @@ import { supabase } from '@/lib/supabase';
 
 import { Colors } from '@/constants/Colors';
 import { addToCart } from '@/data/data';
-import { CartItemProps, Product } from '@/types/types';
-import { getProductById, updateCart } from '@/data/data';
+import { CartItemProps, Product, Variant } from '@/types/types';
+import { updateCart } from '@/data/data';
 
 const { width } = Dimensions.get('window');
 
 interface UpdateModalProps {
     visible: boolean;
     onClose: () => void;
-    product_id: string | undefined;
-    variant: CartItemProps | undefined;
+    variants?: Variant[] | null;
+    variant?: CartItemProps;
+    price?: number;
+    discount?: number;
 }
 
-const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, product_id, variant }) => {
+const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, variants, variant, price, discount }) => {
     const [cartImageDis, setCartImage] = useState<string>();
     const [cartStock, setCartStock] = useState<number>(0);
 
@@ -29,7 +31,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, product_id,
 
     const [isLoading, setIsLoading] = useState(false);
 
-    const [product, setProduct] = useState<Product>();
+    const [product, setProduct] = useState<Variant[] | null | undefined>(variants);
 
     const [colors, setColors] = useState<{ color: string; image: string; }[]>([]);
     const [sizes, setSizes] = useState<{ size: string; dimension: string; }[]>([]);
@@ -56,7 +58,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, product_id,
     }));
 
     useEffect(() => {
-        const selectedVariant = product?.product_variant.find(
+        const selectedVariant = product?.find(
             (stock) => stock.product_color.color === selectedColor && stock.product_size.size === selectedSize
         );
 
@@ -74,35 +76,14 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, product_id,
     }
 
     useEffect(() => {
-        if (product_id) {
-            const fetchProduct = async () => {
-                const fetchedProduct = await getProductById(product_id);
-                if (fetchedProduct) {
-                    setProduct(fetchedProduct[0]);
-                } else {
-                    // handle if product not found
-                    return (
-                        <View style={{ flex: 1 }}>
-                            <Text>Product Not Found</Text>
-                        </View>
-                    );
-                }
-            };
-            fetchProduct();
-        }
-    }, [product_id]);
-
-    useEffect(() => {
         if (product) {
-            const price = product?.product_price ?? 0;
-            const discount = product?.product_discount ?? 0;
             const discountedPrice = calculateDiscountedPrice(price, discount);
             setProductPrice(price);
             setDiscountedPrice(discountedPrice);
 
             const uniqueColors = [
                 ...new Map<string, string>(
-                    product.product_variant.map((variant: any) => [
+                    product.map((variant: any) => [
                         variant.product_color.color as string,
                         variant.product_color.image as string,
                     ])
@@ -111,7 +92,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, product_id,
 
             const uniqueSizes = [
                 ...new Map<string, string>(
-                    product.product_variant.map((variant: any) => [
+                    product.map((variant: any) => [
                         variant.product_size.size as string,
                         variant.product_size.dimension as string,
                     ])
@@ -120,13 +101,10 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, product_id,
 
             setColors(uniqueColors);
             setSizes(uniqueSizes);
-
-            handleSizeSelected(variant?.product_variant.product_size.size || '');
-            handleColorSelected(variant?.product_variant.product_color.color || '');
-            setCartImage(variant?.product_variant.product_color.image || '')
-            setSelectedDimension(variant?.product_variant.product_size.dimension);
         }
     }, [product]);
+
+    
 
     const handleSizeSelected = (selectedValues: any) => {
         setSelectedSize(selectedValues);
@@ -145,6 +123,15 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, product_id,
         }
     };
 
+    useEffect(() => {
+        if (visible && variant) {
+            handleSizeSelected(variant.product_variant.product_size.size || '');
+            handleColorSelected(variant.product_variant.product_color.color || '');
+            setCartImage(variant.product_variant.product_color.image || '');
+            setSelectedDimension(variant.product_variant.product_size.dimension);
+        }
+    }, [colors, sizes]);
+
     const handleDisable = () => {
         return ((selectedSize && selectedColor) && cartStock != 0) ? false : true;
     }
@@ -155,7 +142,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, product_id,
 
         if (!userId) {
             Alert.alert('Not logged in', 'Please log in first!');
-            router.push('../Login');
+            router.push('../LoginScreen');
             return;
         }
         if (handleDisable()) return;
@@ -184,7 +171,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, product_id,
     };
 
     const StockCount: React.FC<{ color: string, size: string }> = ({ color, size }) => {
-        const stocks = product?.product_variant.find(stock => stock.product_color.color === color && stock.product_size.size === size);
+        const stocks = product?.find(stock => stock.product_color.color === color && stock.product_size.size === size);
 
         return <Text style={{ color: Colors.secondary }}>Stock: {stocks?.product_quantity ? stocks.product_quantity : 'Out Of Stock'}</Text>;
     };
@@ -231,7 +218,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, product_id,
                                 ) : null)}
                                 <View style={{ flexDirection: 'column', paddingHorizontal: 8, width: 'auto' }}>
                                     <View style={{ flexDirection: 'column', width: 'auto' }}>
-                                        {product?.product_discount && discountedPrice ? (
+                                        {discount && discountedPrice ? (
                                             <>
                                                 <Text style={[styles.discountedPrice, { marginLeft: 0 }]}>₱{discountedPrice.toFixed(2)}</Text>
                                                 <Text style={[styles.originalPrice, { marginLeft: 0 }]}>₱{productPrice?.toFixed(2)}</Text>

@@ -86,104 +86,106 @@ export default function Account() {
     }
   };
 
-  if (loading) {
-    return <Loading />;
-  }
-
   if (!isAuthenticated) {
     router.replace('../LoginScreen');
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View style={styles.profileSection}>
-        {profilePic ? (
-          <Image
-            style={styles.profileImage}
-            source={{ uri: profilePic }}
-          />
-        ) : (
-          <Image
-            style={styles.profileImage}
-            source={require('@/assets/images/user.png')}
-          />
-        )}
-
-        <Text style={styles.profileName}>{nickname}</Text>
-        <Text style={styles.profileEmail}>{email}</Text>
-      </View>
-      <View style={styles.optionsContainer}>
-        <TouchableOpacity onPress={() => router.navigate('../UnderConstruction')} style={styles.optionItem}>
-          <View style={styles.option}>
-            <View style={styles.optionApart}>
-              <SimpleLineIcons name="bag" size={24} color="#333" />
-              <Text style={styles.optionText}>My Orders</Text>
-            </View>
-            <Entypo name="chevron-right" size={24} color="#333" />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.navigate('../EditProfileScreen')} style={styles.optionItem}>
-          <View style={styles.option}>
-            <View style={styles.optionApart}>
-              <Ionicons name="person-outline" size={24} color="#333" />
-              <Text style={styles.optionText}>Edit Profile</Text>
-            </View>
-            <Entypo name="chevron-right" size={24} color="#333" />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.navigate('../UnderConstruction')} style={styles.optionItem}>
-          <View style={styles.option}>
-            <View style={styles.optionApart}>
-              <SimpleLineIcons name="location-pin" size={24} color="#333" />
-              <Text style={styles.optionText}>Address</Text>
-            </View>
-            <Entypo name="chevron-right" size={24} color="#333" />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.navigate('../HelpCenter')} style={styles.optionItem}>
-          <View style={styles.option}>
-            <View style={styles.optionApart}>
-              <Ionicons name="information-circle-outline" size={24} color="#333" />
-              <Text style={styles.optionText}>Help Center</Text>
-            </View>
-            <Entypo name="chevron-right" size={24} color="#333" />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.logoutoptionItem}>
-          <View style={styles.logoutoptionApart}>
-            <MaterialIcons name="logout" size={24} color="red" />
-            <Text style={styles.logoutoptionText}>Logout</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-      <Modal transparent={true} animationType="fade" visible={modalVisible}>
-        <View style={styles.overlay}>
-          <View style={styles.modalContainer}>
-            {loggingOut ? (
-              <ActivityIndicator size="large" color={Colors.primary} style={{ margin: 'auto' }} />
+    <>
+      {loading ? (
+        <Loading />
+      ) : (
+        <ScrollView
+          style={styles.container}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <View style={styles.profileSection}>
+            {profilePic ? (
+              <Image
+                style={styles.profileImage}
+                source={{ uri: profilePic }}
+              />
             ) : (
-              <>
-                <Text style={styles.title}>Confirm Logout</Text>
-                <Text style={styles.message}>Are you sure you want to log out?</Text>
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity style={styles.confirmButton} onPress={handleLogout}>
-                    <Text style={styles.buttonText}>Yes, Logout</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-                    <Text style={styles.buttonText}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
+              <Image
+                style={styles.profileImage}
+                source={require('@/assets/images/user.png')}
+              />
             )}
+
+            <Text style={styles.profileName}>{nickname}</Text>
+            <Text style={styles.profileEmail}>{email}</Text>
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
+          <View style={styles.optionsContainer}>
+            <TouchableOpacity onPress={() => router.navigate('../UnderConstruction')} style={styles.optionItem}>
+              <View style={styles.option}>
+                <View style={styles.optionApart}>
+                  <SimpleLineIcons name="bag" size={24} color="#333" />
+                  <Text style={styles.optionText}>My Orders</Text>
+                </View>
+                <Entypo name="chevron-right" size={24} color="#333" />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.navigate('../EditProfileScreen')} style={styles.optionItem}>
+              <View style={styles.option}>
+                <View style={styles.optionApart}>
+                  <Ionicons name="person-outline" size={24} color="#333" />
+                  <Text style={styles.optionText}>Edit Profile</Text>
+                </View>
+                <Entypo name="chevron-right" size={24} color="#333" />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.navigate('../UnderConstruction')} style={styles.optionItem}>
+              <View style={styles.option}>
+                <View style={styles.optionApart}>
+                  <SimpleLineIcons name="location-pin" size={24} color="#333" />
+                  <Text style={styles.optionText}>Address</Text>
+                </View>
+                <Entypo name="chevron-right" size={24} color="#333" />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.navigate('../HelpCenter')} style={styles.optionItem}>
+              <View style={styles.option}>
+                <View style={styles.optionApart}>
+                  <Ionicons name="information-circle-outline" size={24} color="#333" />
+                  <Text style={styles.optionText}>Help Center</Text>
+                </View>
+                <Entypo name="chevron-right" size={24} color="#333" />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.logoutoptionItem}>
+              <View style={styles.logoutoptionApart}>
+                <MaterialIcons name="logout" size={24} color="red" />
+                <Text style={styles.logoutoptionText}>Logout</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+          <Modal transparent={true} animationType="fade" visible={modalVisible}>
+            <View style={styles.overlay}>
+              <View style={styles.modalContainer}>
+                {loggingOut ? (
+                  <ActivityIndicator size="large" color={Colors.primary} style={{ margin: 'auto' }} />
+                ) : (
+                  <>
+                    <Text style={styles.title}>Confirm Logout</Text>
+                    <Text style={styles.message}>Are you sure you want to log out?</Text>
+                    <View style={styles.buttonContainer}>
+                      <TouchableOpacity style={styles.confirmButton} onPress={handleLogout}>
+                        <Text style={styles.buttonText}>Yes, Logout</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+                        <Text style={styles.buttonText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                )}
+              </View>
+            </View>
+          </Modal>
+        </ScrollView>
+      )}
+    </>
   );
 }
 

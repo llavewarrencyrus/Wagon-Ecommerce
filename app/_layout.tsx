@@ -44,7 +44,7 @@ export default function RootLayout() {
               <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="Category" />
-                <Stack.Screen name="Cart" />
+                <Stack.Screen name="Cart" options={{ headerShadowVisible: false }}/>
                 <Stack.Screen name="Chat" />
                 <Stack.Screen name="LoginScreen" />
                 <Stack.Screen name="+not-found" />

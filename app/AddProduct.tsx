@@ -214,7 +214,6 @@ const AddProduct = () => {
             product_material: selectedMaterials,
             product_description: descriptionState.trim(),
         };
-        console.log(imageUploaded)
         const { data, error } = await supabase.from('products').insert([product]);
 
         if (error) {
@@ -430,8 +429,6 @@ const AddProduct = () => {
             return false
         }
     };
-
-    console.log(imageUploaded);
 
     return (
         <View style={styles.container}>

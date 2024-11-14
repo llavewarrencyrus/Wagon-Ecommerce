@@ -7,6 +7,18 @@ export interface ProductWrapperProps {
   children: ReactNode;
 }
 
+export interface Variant {
+  variant_id: string
+  product_color: {
+    color: string;
+    image: string;
+  }
+  product_size: {
+    size: string;
+    dimension: string;
+  }
+  product_quantity: number;
+}
 
 export interface Product {
   product_id: string;
@@ -18,19 +30,10 @@ export interface Product {
   product_rating: number;
   sales_count: number;
   product_material: Array<string>;
-  product_variant: {
-    variant_id: string
-    product_color: {
-      color: string;
-      image: string;
-    }
-    product_size: {
-      size: string;
-      dimension: string;
-    }
-    product_quantity: number;
-  }[]
+  product_variant: Variant[];
 }
+
+
 
 export interface ProductCardProps {
   imageUri: Array<string>;
@@ -42,17 +45,17 @@ export interface ProductCardProps {
 }
 
 export interface ProductListProps {
-  products: Product[] ;         
-  header?: React.ReactNode | null;     
-  onScroll?: ((event: any) => void);  
-  scroll?: boolean;  
+  products: Product[];
+  header?: React.ReactNode | null;
+  onScroll?: ((event: any) => void);
+  scroll?: boolean;
 }
-export interface Category  {
+export interface Category {
   id: number;
   name: string;
   parent_id: number | null;
 };
-export interface DummySearch  {
+export interface DummySearch {
   value?: string;
 };
 
@@ -80,37 +83,37 @@ export interface CartItemProps {
   user_id: string;
   product_variant: {
     product_id: string;
-    products:{
+    products: {
       product_name: string;
       product_price: number;
       product_discount: number;
     };
-    product_size:{
+    product_size: {
       id: string;
       size: string;
       dimension: string;
       product_id: string;
     };
-    product_color:{
+    product_color: {
       id: string;
       color: string;
       image: string;
-      product_id: string; 
+      product_id: string;
     };
     product_quantity: number;
   };
-  quantity:number;
+  quantity: number;
 }
 
 //Types
 export type RootStackParamList = {
   Home: undefined;
   Product: { id: string; keyword: string; category: string };
-  ProductList: {products: Array<Product>};
+  ProductList: { products: Array<Product> };
   SellerMessages: undefined;
   SellerChat: { senderId: string };
-  Search: {value?: string};
-  Refresh: {refresh?: boolean};
+  Search: { value?: string };
+  Refresh: { refresh?: boolean };
 };
 
 export type NavigationProp = StackNavigationProp<RootStackParamList>;

@@ -1,6 +1,8 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { supabase } from '@/lib/supabase';
+
 interface AuthContextType {
   isAuthenticated: boolean;
   user: { id: string; email: string } | null;
@@ -37,9 +39,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Logout and clear session from AsyncStorage
   const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error logging out from Supabase:', error.message);
+      return;
+    }
+
+    // Clear session data locally
     setIsAuthenticated(false);
     setUser(null);
-    await AsyncStorage.removeItem('user'); // Clear user session
+    await AsyncStorage.removeItem('user');
   };
 
   return (

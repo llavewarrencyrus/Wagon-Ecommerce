@@ -49,6 +49,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ visible, onClose, colors, s
 
     const [isLoading, setIsLoading] = useState(false);
 
+    const [quantity, setQuantity] = useState(1);
+
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [selectedDimensions, setSelectedDimension] = useState<string | null>(null);
@@ -68,15 +70,22 @@ const ProductModal: React.FC<ProductModalProps> = ({ visible, onClose, colors, s
     const router = useRouter();
 
     useEffect(() => {
-        const selectedVariant = variant.find(
-            (stock) => stock.product_color.color === selectedColor && stock.product_size.size === selectedSize
-        );
+        if (selectedColor && selectedSize) {
+            const selectedVariant = variant.find(
+                (stock) => stock.product_color.color === selectedColor && stock.product_size.size === selectedSize
+            );
 
-        if (selectedVariant) {
-            setCartStock(selectedVariant.product_quantity);
-            setVariant(selectedVariant.variant_id);
+            if (selectedVariant) {
+                setCartStock(selectedVariant.product_quantity);
+                setVariant(selectedVariant.variant_id);
+            } else {
+                setCartStock(0);
+                setQuantity(1);
+                setVariant('selected');
+            }
         } else {
-            setCartStock(0);
+            setVariant('');
+            setQuantity(1);
         }
     }, [selectedColor, selectedSize, variant]);
 
@@ -107,7 +116,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ visible, onClose, colors, s
 
         if (!userId) {
             Alert.alert('Not logged in', 'Please log in first!');
-            router.push('../Login');
+            router.push('../LoginScreen');
             return;
         }
 
@@ -116,7 +125,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ visible, onClose, colors, s
         if (selectVariant) {
             setIsLoading(true);
             const data: CartItemProps | null = await addToCart(userId, selectVariant);
-            
+
             setIsLoading(false);
 
             if (data) {
@@ -128,12 +137,32 @@ const ProductModal: React.FC<ProductModalProps> = ({ visible, onClose, colors, s
         }
     };
 
+    const handleQuantityDisable = (type: string) => {
+        if (type === 'increment') {
+            if (selectedSize && selectedColor && cartStock > 0) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if (type === 'decrement') {
+            if (quantity === 1) {
+                return true;
+            } else {
+                if (selectedSize && selectedColor) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        }
+    }
+
     const StockCount: React.FC<{ color: string, size: string }> = ({ color, size }) => {
         const stocks = variant.find(stock => stock.product_color.color === color && stock.product_size.size === size);
 
-        return <Text style={{ color: Colors.secondary }}>Stock: {stocks?.product_quantity ? stocks.product_quantity : 'Out Of Stock'}</Text>;
+        return <Text style={{ color: Colors.secondary }}>Available Stock: {stocks?.product_quantity ? stocks.product_quantity : 'Out Of Stock'}</Text>;
     };
-
+    
     return (
         <Modal
             animationType="slide"
@@ -148,79 +177,125 @@ const ProductModal: React.FC<ProductModalProps> = ({ visible, onClose, colors, s
                         style={styles.modalView}
                         onPress={() => { }}
                     >
-                        <TouchableOpacity style={styles.closeModal} onPress={onClose}>
-                            <Text style={{ fontSize: 25, color: Colors.secondary }}>X</Text>
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', width: '95%', paddingBottom: 5, marginBottom: 10, borderBottomWidth: 0.8, borderColor: '#d0d0d0' }}>
+                            <Text style={{ width: '90%' }}></Text>
+                            <TouchableOpacity style={styles.closeModal} onPress={onClose}>
+                                <Text style={{ fontSize: 25, color: Colors.secondary, textAlign: 'center' }}>X</Text>
+                            </TouchableOpacity>
+                        </View>
 
                         <View style={{ height: '100%', width: '100%' }}>
-                            <View style={{ flexDirection: 'row' }}>
-                                {cartImageDis ? (
-                                    <Image source={{ uri: cartImageDis }} style={styles.cartImage} />
-                                ) : (colors.length > 0 ? (
-                                    <Image source={{ uri: colors[0].image }} style={styles.cartImage} />
-                                ) : null)}
-                                <View style={{ flexDirection: 'column', paddingHorizontal: 8, width: 'auto' }}>
-                                    <View style={{ flexDirection: 'column', width: 'auto' }}>
-                                        {discount && discountPrice ? (
-                                            <>
-                                                <Text style={[styles.discountedPrice, { marginLeft: 0 }]}>₱{discountPrice.toFixed(2)}</Text>
-                                                <Text style={[styles.originalPrice, { marginLeft: 0 }]}>₱{originalPrice.toFixed(2)}</Text>
-                                            </>
-                                        ) : (
-                                            <Text style={[styles.productPrice, { padding: 8, marginLeft: 0 }]}>₱{originalPrice.toFixed(2)}</Text>
-                                        )}
-                                    </View>
-                                    {selectedSize && selectedColor && (
-                                        <StockCount color={selectedColor} size={selectedSize} />
-                                    )}
-                                </View>
-                            </View>
                             <View>
-                                <View>
-                                    <Text style={{ paddingVertical: 10, color: Colors.text }}>Color:</Text>
-                                    <ButtonMultiselect
-                                        layout={ButtonLayout.GRID}
-                                        buttons={colorBtn}
-                                        selectedButtons={selectedColor}
-                                        onButtonSelected={handleColorSelected}
-                                        buttonStyle={{ padding: 100, margin: 0 }}
-                                        textStyle={{ fontSize: 14, padding: 0 }}
-                                        containerStyle={{ padding: 0 }}
-                                        selectedColors={{ backgroundColor: Colors.selectHighlight, borderColor: Colors.border, textColor: '#ffff' }}
-                                    />
-                                </View>
-                                <View>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 }}>
-                                        <Text style={{ color: Colors.text }}>Size:</Text>
-                                        {selectedDimensions && (
-                                            <Text style={styles.dimensionsText}>{selectedDimensions}</Text>
-                                        )}
+                                <View style={{ flexDirection: 'row' }}>
+                                    {cartImageDis ? (
+                                        <Image source={{ uri: cartImageDis }} style={styles.cartImage} />
+                                    ) : (colors.length > 0 ? (
+                                        <Image source={{ uri: colors[0].image }} style={styles.cartImage} />
+                                    ) : null)}
+                                    <View style={{ flexDirection: 'column', paddingHorizontal: 8, flex: 1, justifyContent: 'space-between' }}>
+                                        <View style={{ flexDirection: 'column', width: 'auto' }}>
+                                            {discount && discountPrice ? (
+                                                <>
+                                                    <Text style={[styles.discountedPrice, { marginLeft: 0 }]}>₱{discountPrice.toFixed(2)}</Text>
+                                                    <Text style={[styles.originalPrice, { marginLeft: 0 }]}>₱{originalPrice.toFixed(2)}</Text>
+                                                </>
+                                            ) : (
+                                                <Text style={[styles.productPrice, { padding: 8, marginLeft: 0 }]}>₱{originalPrice.toFixed(2)}</Text>
+                                            )}
+                                        </View>
+                                        <View style={{ marginHorizontal: 'auto' }}>
+                                            {selectedSize && selectedColor && (
+                                                <StockCount color={selectedColor} size={selectedSize} />
+                                            )}
+                                        </View>
+                                        <View style={{ marginHorizontal: 'auto' }}>
+                                            <View style={{ flexDirection: 'row' }}>
+                                                <TouchableOpacity
+                                                    style={[
+                                                        styles.quantityBtn,
+                                                        { borderBottomLeftRadius: 16, borderTopLeftRadius: 16 },
+                                                        handleQuantityDisable('decrement') ? styles.buttonDisabled : null
+                                                    ]}
+                                                    disabled={handleQuantityDisable('decrement')}
+                                                    onPress={() => setQuantity(stock => stock - 1)}>
+                                                    <Text style={{ color: '#fff' }}>-</Text>
+                                                </TouchableOpacity>
+                                                <Text style={{ textAlignVertical: 'center', paddingHorizontal: 15, backgroundColor: '#f0f0f0', color: Colors.text }}>
+                                                    {selectVariant ? (
+                                                        cartStock > 0 ? (
+                                                            quantity
+                                                        ) : (
+                                                            'Out of Stock'
+                                                        )
+                                                    ) : (
+                                                        'Choose'
+                                                    )}
+                                                </Text>
+                                                <TouchableOpacity
+                                                    style={[
+                                                        styles.quantityBtn,
+                                                        { borderBottomRightRadius: 16, borderTopRightRadius: 16 },
+                                                        handleQuantityDisable('increment') ? styles.buttonDisabled : null
+                                                    ]}
+                                                    disabled={handleQuantityDisable('increment')}
+                                                    onPress={() => setQuantity(stock => stock + 1)}>
+                                                    <Text style={{ color: '#fff' }}>+</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
                                     </View>
-                                    <ButtonMultiselect
-                                        layout={ButtonLayout.GRID}
-                                        buttons={sizeBtn}
-                                        selectedButtons={selectedSize}
-                                        onButtonSelected={handleSizeSelected}
-                                        buttonStyle={{ padding: 100, margin: 0 }}
-                                        textStyle={{ fontSize: 14, padding: 0 }}
-                                        containerStyle={{ padding: 0 }}
-                                        selectedColors={{ backgroundColor: Colors.selectHighlight, borderColor: Colors.border, textColor: '#ffff' }}
-                                    />
                                 </View>
                                 <View>
-                                    <TouchableOpacity
-                                        onPress={handleAddToCart}
-                                        disabled={handleDisable()}
+                                    <View>
+                                        <Text style={{ paddingVertical: 10, color: Colors.text, fontSize: 20 }}>Color{colors.length > 1 ? 's' : ''}</Text>
+                                        <ButtonMultiselect
+                                            layout={ButtonLayout.GRID}
+                                            buttons={colorBtn}
+                                            selectedButtons={selectedColor}
+                                            onButtonSelected={handleColorSelected}
+                                            buttonStyle={{ padding: 100, margin: 0 }}
+                                            textStyle={{ fontSize: 14, padding: 0 }}
+                                            containerStyle={{ paddingHorizontal: 20 }}
+                                            selectedColors={{ backgroundColor: Colors.selectHighlight, borderColor: Colors.border, textColor: '#ffff' }}
+                                        />
+                                    </View>
+                                    <View>
+                                        <View style={{ flexDirection: 'column', paddingVertical: 10 }}>
+                                            <Text style={{ fontSize: 20, color: Colors.text }}>Available Size{sizes.length > 1 ? 's' : ''}</Text>
 
-                                        style={[styles.closeButton,
-                                        handleDisable() ? styles.buttonDisabled : null
-                                        ]}
-                                    >
-                                        <Text style={styles.buttonText}>
-                                            {handleDisable() ?
-                                                'CHOOSE YOUR PREFERENCE' : 'ADD TO CART'}
+
+                                        </View>
+                                        <View style={{ margin: 'auto' }}>
+                                            <ButtonMultiselect
+                                                layout={ButtonLayout.GRID}
+                                                buttons={sizeBtn}
+                                                selectedButtons={selectedSize}
+                                                onButtonSelected={handleSizeSelected}
+                                                buttonStyle={{ padding: 100, margin: 0, borderRadius: 16, width: '30%' }}
+                                                textStyle={{ fontSize: 14, padding: 0 }}
+                                                containerStyle={{ width: '70%', padding: 0 }}
+                                                selectedColors={{ backgroundColor: Colors.selectHighlight, borderColor: Colors.border, textColor: '#ffff' }}
+                                            />
+                                        </View>
+                                        <Text style={styles.dimensionsText}>
+                                            {selectedDimensions && (selectedDimensions)}
                                         </Text>
-                                    </TouchableOpacity>
+                                    </View>
+                                    <View style={{ paddingTop: 20 }}>
+                                        <TouchableOpacity
+                                            onPress={handleAddToCart}
+                                            disabled={handleDisable()}
+
+                                            style={[styles.closeButton,
+                                            handleDisable() ? styles.buttonDisabled : null
+                                            ]}
+                                        >
+                                            <Text style={styles.buttonText}>
+                                                {handleDisable() ?
+                                                    'CHOOSE YOUR PREFERENCE' : 'ADD TO CART'}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
                             </View>
                         </View>
@@ -253,6 +328,8 @@ const styles = StyleSheet.create({
     },
     dimensionsText: {
         color: Colors.primary,
+        textAlign: 'center',
+        paddingTop: 10
     },
     productContainer: {
         width: (width / 2) - 8,
@@ -272,7 +349,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 0,
         width: width,
-        padding: 20,
+        padding: 15,
+        paddingTop: 5,
         backgroundColor: 'white',
         borderTopRightRadius: 10,
         borderTopLeftRadius: 10,
@@ -293,7 +371,7 @@ const styles = StyleSheet.create({
     closeButton: {
         backgroundColor: Colors.button,
         padding: 10,
-        borderRadius: 5,
+        borderRadius: 20,
     },
     buttonText: {
         color: 'white',
@@ -301,10 +379,8 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     closeModal: {
-        position: 'absolute',
-        top: 7,
-        right: 15,
-        zIndex: 99
+        width: '10%',
+
     },
     cartImage: {
         width: width / 3,
@@ -331,6 +407,11 @@ const styles = StyleSheet.create({
     },
     buttonDisabled: {
         backgroundColor: Colors.buttonDisabled
+    },
+    quantityBtn: {
+        paddingHorizontal: 15,
+        paddingVertical: 5,
+        backgroundColor: Colors.button
     }
 });
 

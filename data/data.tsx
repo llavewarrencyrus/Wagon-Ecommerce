@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-import { CartItemProps } from '@/types/types';
+import { CartItemProps, Product, Variant } from '@/types/types';
 
 export const getProducts = async (
   filters: {
@@ -141,6 +141,19 @@ export const getCategoryList = async (id: number | null) => {
   return data || [];
 };
 
+export const getVariant = async (productId: string): Promise<Variant[] | null> => {
+  const { data, error } = await supabase
+    .from('product_variant')
+    .select('*,product_color ( color, image ),product_size ( size, dimension )')
+    .eq('product_id', productId);
+
+  if (error) {
+    console.error('Error fetching variant items:', error.message);
+    return null;
+  }
+  return data as Variant[] | null;
+}
+
 export const getCartItems = async (userId: string) => {
   const { data, error } = await supabase
     .from('cart')
@@ -158,12 +171,12 @@ export const getCartItems = async (userId: string) => {
 const getCartItem = async (variantId: string): Promise<CartItemProps | null> => {
   const { data, error } = await supabase
     .from('cart')
-    .select('*, product_variant(products(product_name, product_price, product_discount), product_size(*), product_color(*), product_quantity)')
+    .select('*, product_variant(product_id, products(product_name, product_price, product_discount), product_size(*), product_color(*), product_quantity)')
     .eq('variant_id', variantId)
     .single();
 
   if (error) {
-    console.error('Error fetching cart items:', error.message);
+    console.error('Error fetching cart item:', error.message);
     return null;
   }
   return data as CartItemProps | null;
@@ -216,7 +229,7 @@ export const updateCart = async (userId: string, variantId: string, cartId: stri
     .update({ variant_id: variantId })
     .eq('user_id', userId)
     .eq('cart_id', cartId)
-    .select('*, product_variant(products(product_name, product_price, product_discount), product_size(*), product_color(*), product_quantity)');
+    .select('*, product_variant(product_id, products(product_name, product_price, product_discount), product_size(*), product_color(*), product_quantity)');
 
   if (updateError) {
     console.error('Error updating item in cart:', updateError.message);

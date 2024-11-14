@@ -1,38 +1,38 @@
 // CartScreen.tsx
+
 import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  Image,
-  TouchableOpacity,
   Alert,
+  TouchableOpacity,
   TouchableWithoutFeedback
 } from 'react-native';
-
 import { useRouter } from 'expo-router';
-import { FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
-
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartProvider';
-
 import { getCartItems, removeFromCart, updateQuantity } from '@/data/data';
 import { Colors } from '@/constants/Colors';
-import { CartItemProps } from '@/types/types';
+import { CartItemProps, Variant } from '@/types/types';
+import CartItem from '@/components/CartScreen/CartList';
 import UpdateModal from '@/components/CartScreen/UpdateCart';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 const CartScreen: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
   const userId = user?.id;
   const { cartItems, setCartItems } = useCart();
-  const [selectedItems, setSelectedItems] = useState<string[]>([]); // Track selected item IDs for checkout
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [modalVisible, setModalVisible] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0.00);
   const [variant, setVariant] = useState<CartItemProps>();
+  const [variants, setVariants] = useState<Variant[] | null>();
+
+  const [selectAll, setSelectAll] = useState<boolean>(false);
 
   if (!user) {
     router.replace('../LoginScreen');
@@ -79,13 +79,40 @@ const CartScreen: React.FC = () => {
         prevSelected.filter(itemId => itemId !== id) :
         [...prevSelected, id]
     );
-    { selectedItems.includes(id) ? setTotalAmount(amount => amount - ((price * (1 - discount / 100)) * quantity)) : setTotalAmount(amount => amount + ((price * (1 - discount / 100)) * quantity)) }
+
+    const itemTotal = (price * (1 - discount / 100)) * quantity;
+
+    setTotalAmount(prevTotal =>
+      selectedItems.includes(id) ?
+        prevTotal - itemTotal :
+        prevTotal + itemTotal
+    );
   };
 
-  const handleUpdateCart = (item: CartItemProps) => {
-    setModalVisible(true);
+  const toggleSelectAllItem = () => {
+    if (selectAll) {
+      // If all items are selected, deselect all
+      setSelectedItems([]);
+      setTotalAmount(0); // Reset total amount to 0 when deselecting all
+      setSelectAll(false); // Update selectAll state to false
+    } else {
+      // If not all items are selected, select all
+      const allItemIds = cartItems.map(item => item.variant_id); // Adjust this line based on your data structure
+      const total = cartItems.reduce((acc, item) => {
+        const itemTotal = (item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100)) * item.quantity;
+        return acc + itemTotal;
+      }, 0);
+      
+      setSelectedItems(allItemIds);
+      setTotalAmount(total); // Set total amount to the sum of all selected items
+      setSelectAll(true); // Update selectAll state to true
+    }
+  };
 
+  const handleUpdateCart = (item: CartItemProps, variant: Variant[] | undefined | null) => {
+    setVariants(variant);
     setVariant(item);
+    setModalVisible(true);
   };
 
   const closeModal = () => {
@@ -121,99 +148,62 @@ const CartScreen: React.FC = () => {
     quantity();
   };
 
-  const ProductPrice = ({ price, discount }: { price: number; discount?: number }) => {
-    const calculateDiscountedPrice = (price: number, discount: number | undefined): number => {
-      if (!discount) return price;
-      return price * (1 - discount / 100);
-    };
 
-    const discountedPrice = calculateDiscountedPrice(price, discount);
-
-    return (
-      <>
-        {discount ? (
-          <View style={{ flexDirection: 'row' }}>
-            <Text style={styles.discountedPrice}>₱{discountedPrice.toFixed(2)}</Text>
-            <Text style={styles.originalPrice}>-{discount}%</Text>
-          </View>
-        ) : (
-          <Text>₱{discountedPrice.toFixed(2)}</Text>
-        )}
-      </>
-    );
-  }
-
-
-  const renderItem = ({ item }: { item: CartItemProps }) => (
-    <View style={styles.cartItem}>
-      <TouchableWithoutFeedback onPress={() => toggleSelectItem(item.variant_id, item.product_variant.products.product_price, item.product_variant.products.product_discount, item.quantity)}>
-        <MaterialIcons
-          name={selectedItems.includes(item.variant_id) ? 'check-box' : 'check-box-outline-blank'}
-          size={20}
-          color={selectedItems.includes(item.variant_id) ? Colors.button : Colors.icon}
-          style={styles.checkbox}
-        />
-      </TouchableWithoutFeedback>
-      <Image source={{ uri: item.product_variant.product_color.image }} style={styles.cartItemImage} />
-      <View style={styles.cartItemDetails}>
-        <Text style={styles.cartItemTitle} numberOfLines={1}>{item.product_variant.products.product_name}</Text>
-        <View style={styles.cartItemPrice}>
-          <ProductPrice price={item.product_variant.products.product_price} discount={item.product_variant.products.product_discount} />
-          <View style={{ marginLeft: 'auto', flexDirection: 'row' }}>
-            <Text style={styles.cartVar}>{item.product_variant.product_color.color}</Text>
-            <Text style={styles.cartVar}>{item.product_variant.product_size.size}</Text>
-          </View>
-        </View>
-        <View style={{ width: '100%', flexDirection: 'row' }}>
-          <View style={styles.quantityContainer}>
-            {(item.quantity < 2) ? (
-              <TouchableOpacity style={[styles.quantityButton, { borderBottomLeftRadius: 4, borderTopLeftRadius: 4 }]} onPress={() => handleRemoveItem(item.variant_id)}>
-                <Ionicons name='trash-outline' size={20} color='#fff' />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={[styles.quantityButton, { borderBottomLeftRadius: 4, borderTopLeftRadius: 4 }]} onPress={() => decrementQuantity(item)}>
-                <Text style={styles.quantityText}>-</Text>
-              </TouchableOpacity>
-            )}
-            <Text style={styles.quantity}>{item.quantity}</Text>
-            <TouchableOpacity style={[styles.quantityButton, { borderBottomRightRadius: 4, borderTopRightRadius: 4 }]} onPress={() => incrementQuantity(item)}>
-              <Text style={styles.quantityText}>+</Text>
-            </TouchableOpacity>
-          </View >
-          <View style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', height: '100%' }}>
-            <TouchableOpacity onPress={() => handleUpdateCart(item)}>
-              <View style={{ flexDirection: 'row', }}>
-                <Text style={{ textAlignVertical: 'top' }}>Edit  </Text>
-                <View style={{ marginTop: 'auto' }}>
-                  <FontAwesome name="edit" size={16} color='#000' />
-                </View>
-              </View>
-            </TouchableOpacity>
-
-          </View>
-        </View>
-      </View>
-    </View>
-  );
 
   if (loading) {
     return <Text>Loading...</Text>;
-  }
+  };
 
   return (
     <View style={styles.container}>
       {cartItems.length === 0 ? (
         <Text style={styles.emptyCartText}>Your cart is empty!</Text>
       ) : (
-        <FlatList
-          data={cartItems}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.variant_id.toString()}
-          contentContainerStyle={styles.listContainer}
-        />
+        <>
+          <View style={{ paddingHorizontal: 18, backgroundColor: '#fff', paddingBottom: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row' }}>
+              <TouchableWithoutFeedback onPress={toggleSelectAllItem}>
+                <MaterialIcons
+                  name={selectAll ? 'check-box' : 'check-box-outline-blank'}
+                  size={20}
+                  color={selectAll ? Colors.button : Colors.icon}
+                  style={styles.checkbox}
+                />
+              </TouchableWithoutFeedback>
+              <Text style={{ fontSize: 16 }}>All</Text>
+            </View>
+            <View style={{ flexDirection: 'row' }}>
+              {selectAll ? (
+                <>
+                  <Text style={{ fontSize: 14, textAlignVertical: 'center', color: 'red' }}>Delete</Text>
+                  <Ionicons name='trash-outline' size={20} color='red' />
+                </>
+              ) : null}
+            </View>
+          </View>
+          <FlatList
+            data={cartItems}
+            renderItem={({ item }) => (
+              <CartItem
+                item={item}
+                selectedItems={selectedItems}
+                toggleSelectItem={toggleSelectItem}
+                incrementQuantity={incrementQuantity}
+                decrementQuantity={decrementQuantity}
+                handleRemoveItem={handleRemoveItem}
+                handleUpdateCart={handleUpdateCart}
+              />
+            )}
+            keyExtractor={(item) => item.variant_id.toString()}
+            contentContainerStyle={styles.listContainer}
+          />
+        </>
       )}
       <View style={styles.totalContainer}>
-        <Text style={styles.totalText}>Total Amount: ${totalAmount.toFixed(2)}</Text>
+        <View>
+          <Text style={styles.totalAmountText}>Total Amount</Text>
+          <Text style={styles.totalText}>₱{totalAmount.toFixed(2)}</Text>
+        </View>
         <TouchableOpacity onPress={handleCheckout} style={styles.checkoutButton}>
           <Text style={styles.checkoutText}>Checkout</Text>
         </TouchableOpacity>
@@ -222,13 +212,12 @@ const CartScreen: React.FC = () => {
         <UpdateModal
           visible={modalVisible}
           onClose={closeModal}
-          product_id={variant?.product_variant.product_id}
+          variants={variants}
           variant={variant}
+          price={variant?.product_variant.products.product_price}
+          discount={variant?.product_variant.products.product_discount}
         />
-      ) : (
-        null
-      )}
-
+      ) : null}
     </View>
   );
 };
@@ -236,7 +225,6 @@ const CartScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 8,
   },
   emptyCartText: {
     fontSize: 18,
@@ -248,83 +236,16 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 20,
   },
-  cartItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+  totalContainer: {
     padding: 16,
-    backgroundColor: 'white',
-    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
   },
-  cartItemImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 16,
-  },
-  cartItemDetails: {
-    flex: 1,
-  },
-  cartItemTitle: {
+  totalAmountText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: Colors.title,
-  },
-  cartItemPrice: {
-    fontSize: 16,
-    flexDirection: 'row',
-    color: Colors.priceOriginal,
-    marginTop: 4,
-  },
-  discountedPrice: {
-    color: Colors.discount,
-    fontWeight: 'bold',
-  },
-  originalPrice: {
-    fontSize: 12,
-    textAlign: 'center',
-    borderWidth: 0.8,
-    borderRadius: 4,
-    borderColor: Colors.discount,
-    marginHorizontal: 6,
-    paddingHorizontal: 3,
-    color: Colors.discount,
-  },
-  quantityContainer: {
-    width: '40%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  quantityButton: {
-    width: '30%',
-    backgroundColor: Colors.buttonUnactive,
-    padding: 4,
-  },
-  quantityText: {
-    margin: 'auto',
-    fontSize: 16,
-    color: '#fff',
-  },
-  quantity: {
-    width: '30%',
-    padding: 4,
-    textAlign: 'center',
-    fontSize: 16,
-    color: Colors.text,
-    backgroundColor: '#D3D3D3'
-  },
-  removeButton: {
-    marginTop: 8,
-  },
-  removeButtonText: {
-    color: Colors.error,
-    fontWeight: 'bold',
-  },
-  totalContainer: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   totalText: {
     fontSize: 20,
@@ -332,26 +253,20 @@ const styles = StyleSheet.create({
     color: Colors.title,
   },
   checkoutButton: {
-    marginTop: 16,
     backgroundColor: Colors.button,
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderRadius: 30,
     alignItems: 'center',
+    width: '50%',
   },
   checkoutText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+    margin: 'auto'
   },
   checkbox: {
     marginRight: 8,
   },
-  cartVar: {
-    backgroundColor: '#D3D3D3',
-    paddingHorizontal: 6,
-    marginLeft: 5,
-    borderRadius: 4
-  }
 });
 
 export default CartScreen;

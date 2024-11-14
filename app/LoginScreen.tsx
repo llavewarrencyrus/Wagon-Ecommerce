@@ -36,7 +36,6 @@ const LoginScreen = () => {
         Alert.alert('Login', error.message);
         return;
       }
-      console.log(data.user)
 
       if (data.user) {
         const userId = data.user.id;
