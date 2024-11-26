@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-import { CartItemProps, Product, Variant } from '@/types/types';
+import { AddressProps, CartItemProps, Product, Variant } from '@/types/types';
 
 export const getProducts = async (
   filters: {
@@ -168,31 +168,36 @@ export const getCartItems = async (userId: string) => {
   return data || [];
 };
 
-const getCartItem = async (variantId: string): Promise<CartItemProps | null> => {
+const getCartItem = async (userId: string, variantId: string): Promise<CartItemProps | null> => {
   const { data, error } = await supabase
     .from('cart')
     .select('*, product_variant(product_id, products(product_name, product_price, product_discount), product_size(*), product_color(*), product_quantity)')
     .eq('variant_id', variantId)
+    .eq('user_id', userId)
     .single();
 
   if (error) {
-    console.error('Error fetching cart item:', error.message);
     return null;
   }
   return data as CartItemProps | null;
 }
 
-export const addToCart = async (userId: string, variantId: string): Promise<CartItemProps | null> => {
-  const { data, error } = await supabase
-    .from('cart')
-    .insert([{ user_id: userId, variant_id: variantId }]);
+export const addToCart = async (userId: string, variantId: string, quantity: number): Promise<CartItemProps | null> => {
+  const exist = await getCartItem(userId, variantId);
+  if (exist) {
+    const update = async () => await updateQuantity(exist.cart_id, exist.quantity + quantity);
+    update();
+  } else {
+    const { data, error } = await supabase
+      .from('cart')
+      .insert([{ user_id: userId, variant_id: variantId, quantity: quantity }]);
 
-  if (error) {
-    console.error('Error adding item to cart:', error.message);
-    return null;
+    if (error) {
+      console.error('Error adding item to cart:', error.message);
+      return null;
+    }
   }
-
-  const item = await getCartItem(variantId);
+  const item = await getCartItem(userId, variantId);
 
   return item;
 };
@@ -201,7 +206,7 @@ export const updateQuantity = async (cartItemId: string, quantity: number) => {
   const { data, error } = await supabase
     .from('cart')
     .update({ quantity: quantity })
-    .eq('variant_id', cartItemId);
+    .eq('cart_id', cartItemId);
 
   if (error) {
     console.error('Error updating item quantity:', error.message);
@@ -214,7 +219,7 @@ export const removeFromCart = async (cartItemId: string) => {
   const { data, error } = await supabase
     .from('cart')
     .delete()
-    .eq('variant_id', cartItemId);
+    .eq('cart_id', cartItemId);
 
   if (error) {
     console.error('Error removing item from cart:', error.message);
@@ -236,4 +241,46 @@ export const updateCart = async (userId: string, variantId: string, cartId: stri
     return null;
   }
   return updatedItems && updatedItems.length > 0 ? updatedItems[0] as CartItemProps | null : null;
+}
+
+export const getAddresses = async (userId: string | undefined) => {
+  const { data, error } = await supabase
+    .from('addresses')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error fetching addresses:', error.message);
+    return [];
+  }
+
+  return data;
+}
+
+export const getAddress = async (addressId: string) => {
+  const { data, error } = await supabase
+    .from('addresses')
+    .select('*')
+    .eq('id', addressId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching address:', error.message);
+    return null;
+  }
+  return data;
+}
+
+export const udpateAddress = async (address: AddressProps, addressId: string) => {
+  const { data, error } = await supabase
+    .from('addresses')
+    .update(address)
+    .eq('id', addressId)
+    .select();
+
+  if (error) {
+    console.error('Error updating address:', error.message);
+    return null;
+  }
+  return data;
 }

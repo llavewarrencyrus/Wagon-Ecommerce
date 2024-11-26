@@ -39,7 +39,7 @@ function ProductPreview({ setProductPrice, setDiscountedPrice, product }: Produc
         }
         return num.toString();
     };
-    
+
     const toggleDescription = () => {
         setIsDescriptionExpanded(!isDescriptionExpanded);
     };
@@ -75,20 +75,20 @@ function ProductPreview({ setProductPrice, setDiscountedPrice, product }: Produc
             </View>
             {product.product_description ? (
                 <View style={{ paddingHorizontal: 8, margin: 0 }}>
-                <Text
-                    numberOfLines={isDescriptionExpanded ? undefined : 3} // Show 3 lines initially
-                    ellipsizeMode="tail" // Show "..." at the end if collapsed
-                >
-                    {product.product_description}
-                </Text>
+                    <Text
+                        numberOfLines={isDescriptionExpanded ? undefined : 3} // Show 3 lines initially
+                        ellipsizeMode="tail" // Show "..." at the end if collapsed
+                    >
+                        {product.product_description}
+                    </Text>
 
-                {/* Show "More" button if description exceeds 3 lines */}
-                {!isDescriptionExpanded && product.product_description.length > 100 && (
-                    <TouchableOpacity onPress={toggleDescription}>
-                        <Text style={styles.moreText}>More</Text>
-                    </TouchableOpacity>
-                )}
-            </View>
+                    {/* Show "More" button if description exceeds 3 lines */}
+                    {!isDescriptionExpanded && product.product_description.length > 100 && (
+                        <TouchableOpacity onPress={toggleDescription}>
+                            <Text style={styles.moreText}>More</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
             ) : (
                 <Text style={[styles.productPrice, { padding: 8 }]}>₱{priceNumber.toFixed(2)}</Text>
             )}

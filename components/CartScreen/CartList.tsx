@@ -80,11 +80,11 @@ const CartItem: React.FC<CartItem> = ({
   return (
     <View style={styles.cartItem}>
       <View style={styles.cartItemWrapper}>
-        <TouchableWithoutFeedback onPress={() => toggleSelectItem(item.variant_id, item.product_variant.products.product_price, item.product_variant.products.product_discount, item.quantity)}>
+        <TouchableWithoutFeedback onPress={() => toggleSelectItem(item.cart_id, item.product_variant.products.product_price, item.product_variant.products.product_discount, item.quantity)}>
           <MaterialIcons
-            name={selectedItems.includes(item.variant_id) ? 'check-box' : 'check-box-outline-blank'}
+            name={selectedItems.includes(item.cart_id) ? 'check-box' : 'check-box-outline-blank'}
             size={20}
-            color={selectedItems.includes(item.variant_id) ? Colors.button : Colors.icon}
+            color={selectedItems.includes(item.cart_id) ? Colors.button : Colors.icon}
             style={styles.checkbox}
           />
         </TouchableWithoutFeedback>
@@ -101,7 +101,7 @@ const CartItem: React.FC<CartItem> = ({
           <View style={{ width: '100%', flexDirection: 'row' }}>
             <View style={styles.quantityContainer}>
               {(item.quantity < 2) ? (
-                <TouchableOpacity style={[styles.quantityButton, { borderBottomLeftRadius: 4, borderTopLeftRadius: 4 }]} onPress={() => handleRemoveItem(item.variant_id)}>
+                <TouchableOpacity style={[styles.quantityButton, { borderBottomLeftRadius: 4, borderTopLeftRadius: 4 }]} onPress={() => handleRemoveItem(item.cart_id)}>
                   <Ionicons name='trash-outline' size={20} color='#fff' />
                 </TouchableOpacity>
               ) : (

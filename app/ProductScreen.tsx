@@ -19,6 +19,7 @@ import ProductImage from '@/components/ProductScreen/ProductImage';
 import ProductPreview from '@/components/ProductScreen/ProductPreview';
 import ProductDescription from '@/components/ProductScreen/ProductDescription';
 import ProductModal from '@/components/ProductScreen/AddToCart';
+import LottieView from 'lottie-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -37,6 +38,8 @@ function ProductScreen() {
 
     const [imageIndex, setImageIndex] = useState(0);
     const [prevImage, setPrevImage] = useState<{ uri: string; }[]>([]);
+
+
 
     const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -244,7 +247,6 @@ function ProductScreen() {
                         </View>
                     </ParallaxScrollView>
 
-                    <View><Text>Testing...</Text></View>
                     <View style={styles.addCartWrapper}>
                         <TouchableOpacity onPress={handleAddToCart} style={styles.addCartBtn}>
                             <Text style={{ fontSize: 20, textAlign: 'center', color: 'white' }}>Add to Cart</Text>
@@ -266,6 +268,7 @@ function ProductScreen() {
                             onRequestClose={handleImageClose}
                         />
                     </View>
+                    
                 </>
             ) : (<Loading />)}
         </>

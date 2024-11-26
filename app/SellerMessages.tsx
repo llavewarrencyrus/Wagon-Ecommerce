@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
-import { SellerMessagesNavigationProp } from '../components/NavigationType'; // Ensure path is correct
+import { SellerMessagesNavigationProp } from '@/types/types';
 
 interface Message {
   messages_id: string;

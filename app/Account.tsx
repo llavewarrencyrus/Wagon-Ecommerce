@@ -136,7 +136,7 @@ export default function Account() {
                 <Entypo name="chevron-right" size={24} color="#333" />
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.navigate('../UnderConstruction')} style={styles.optionItem}>
+            <TouchableOpacity onPress={() => router.navigate('../AddressScreen')} style={styles.optionItem}>
               <View style={styles.option}>
                 <View style={styles.optionApart}>
                   <SimpleLineIcons name="location-pin" size={24} color="#333" />

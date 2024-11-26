@@ -2,7 +2,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import SellerMessages from './SellerMessages';
 import SellerChat from './SellerChat';
-import { RootStackParamList } from '../components/NavigationType';
+import { RootStackParamList } from '@/types/types';
 import React from 'react';
 
 const Stack = createStackNavigator<RootStackParamList>();

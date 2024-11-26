@@ -8,7 +8,10 @@ import {
   FlatList,
   Alert,
   TouchableOpacity,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  Image,
+  Dimensions,
+  Modal
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
@@ -19,12 +22,19 @@ import { CartItemProps, Variant } from '@/types/types';
 import CartItem from '@/components/CartScreen/CartList';
 import UpdateModal from '@/components/CartScreen/UpdateCart';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import Loading from '@/components/Loading';
+import LottieView from 'lottie-react-native';
+
+const { width } = Dimensions.get('window');
 
 const CartScreen: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
   const userId = user?.id;
+
   const { cartItems, setCartItems } = useCart();
+  const { selectedPurchase, setSelectedPurchase } = useCart();
+
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -33,6 +43,10 @@ const CartScreen: React.FC = () => {
   const [variants, setVariants] = useState<Variant[] | null>();
 
   const [selectAll, setSelectAll] = useState<boolean>(false);
+
+  const [deleteItemModalVisible, setDeleteItemModalVisible] = useState(false);
+  const [deleteAllModalVisible, setDeleteAllModalVisible] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   if (!user) {
     router.replace('../LoginScreen');
@@ -57,20 +71,22 @@ const CartScreen: React.FC = () => {
     fetchCartItems();
   }, [userId]);
 
-  const handleRemoveItem = async (id: string) => {
-    Alert.alert('Remove Item', 'Are you sure you want to remove this item from your cart?', [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'OK',
-        onPress: async () => {
-          await removeFromCart(id);
-          setCartItems((prevItems) => prevItems.filter(item => item.variant_id !== id));
-        },
-      },
-    ]);
+  useEffect(() => {
+    setSelectAll(selectedItems.length === cartItems.length);
+  }, [selectedItems, cartItems]);
+
+  const handleRemoveItem = (id: string) => {
+    setItemToDelete(id);
+    setDeleteItemModalVisible(true);
+  };
+
+  const confirmDeleteItem = async () => {
+    if (itemToDelete) {
+      await removeFromCart(itemToDelete);
+      setCartItems((prevItems) => prevItems.filter(item => item.cart_id !== itemToDelete));
+      setItemToDelete(null);
+      setDeleteItemModalVisible(false);
+    }
   };
 
   const toggleSelectItem = (id: string, price: number, discount: number, quantity: number) => {
@@ -82,31 +98,41 @@ const CartScreen: React.FC = () => {
 
     const itemTotal = (price * (1 - discount / 100)) * quantity;
 
-    setTotalAmount(prevTotal =>
-      selectedItems.includes(id) ?
-        prevTotal - itemTotal :
-        prevTotal + itemTotal
-    );
+    setTotalAmount(prevTotal => {
+      const newTotal = selectedItems.includes(id) ? prevTotal - itemTotal : prevTotal + itemTotal;
+      return Math.max(0, parseFloat(newTotal.toFixed(2)));
+    });
   };
 
   const toggleSelectAllItem = () => {
     if (selectAll) {
-      // If all items are selected, deselect all
       setSelectedItems([]);
-      setTotalAmount(0); // Reset total amount to 0 when deselecting all
-      setSelectAll(false); // Update selectAll state to false
+      setTotalAmount(0);
+      setSelectAll(false);
     } else {
-      // If not all items are selected, select all
-      const allItemIds = cartItems.map(item => item.variant_id); // Adjust this line based on your data structure
+      const allItemIds = cartItems.map(item => item.cart_id);
       const total = cartItems.reduce((acc, item) => {
         const itemTotal = (item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100)) * item.quantity;
         return acc + itemTotal;
       }, 0);
-      
+
       setSelectedItems(allItemIds);
-      setTotalAmount(total); // Set total amount to the sum of all selected items
-      setSelectAll(true); // Update selectAll state to true
+      setTotalAmount(total);
+      setSelectAll(true);
     }
+  };
+
+  const deleteAll = () => {
+    setDeleteAllModalVisible(true);
+  };
+
+  const confirmDeleteAll = async () => {
+    await Promise.all(selectedItems.map(id => removeFromCart(id)));
+    setCartItems(prevItems => prevItems.filter(item => !selectedItems.includes(item.cart_id)));
+    setSelectedItems([]);
+    setTotalAmount(0);
+    setSelectAll(false);
+    setDeleteAllModalVisible(false);
   };
 
   const handleUpdateCart = (item: CartItemProps, variant: Variant[] | undefined | null) => {
@@ -120,28 +146,29 @@ const CartScreen: React.FC = () => {
   };
 
   const handleCheckout = () => {
-    const itemsToCheckout = cartItems.filter(item => selectedItems.includes(item.variant_id));
-    if (itemsToCheckout.length === 0) {
+    const itemstoCheckout = cartItems.filter(item => selectedItems.includes(item.cart_id))
+    setSelectedPurchase(itemstoCheckout);
+    if (selectedPurchase.length === 0) {
       Alert.alert('No Items Selected', 'Please select at least one item to proceed to checkout.');
       return;
     }
-    router.push(`../CheckOut?item=${itemsToCheckout}`);
+    router.push('../CheckOutScreen')
   };
 
   const incrementQuantity = (item: CartItemProps) => {
-    updateCartItemQuantity(item.variant_id, (item.quantity + 1));
+    updateCartItemQuantity(item.cart_id, (item.quantity + 1));
     { selectedItems.includes(item.variant_id) ? setTotalAmount(amount => amount + (item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100))) : null }
   };
 
   const decrementQuantity = (item: CartItemProps) => {
-    updateCartItemQuantity(item.variant_id, (item.quantity - 1));
-    { selectedItems.includes(item.variant_id) ? setTotalAmount(amount => amount - (item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100))) : null }
+    updateCartItemQuantity(item.cart_id, (item.quantity - 1));
+    { selectedItems.includes(item.cart_id) ? setTotalAmount(amount => amount - (item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100))) : null }
   };
 
   const updateCartItemQuantity = (itemId: string, newQuantity: number) => {
     setCartItems((prevItems) =>
       prevItems.map((item) =>
-        item.variant_id === itemId ? { ...item, quantity: newQuantity } : item
+        item.cart_id === itemId ? { ...item, quantity: newQuantity } : item
       )
     );
     const quantity = async () => await updateQuantity(itemId, newQuantity);
@@ -151,13 +178,16 @@ const CartScreen: React.FC = () => {
 
 
   if (loading) {
-    return <Text>Loading...</Text>;
+    return <Loading />;
   };
 
   return (
     <View style={styles.container}>
       {cartItems.length === 0 ? (
-        <Text style={styles.emptyCartText}>Your cart is empty!</Text>
+        <View>
+          <Image source={require('@/assets/images/emptyCart.png')} style={{ width: width * 0.6, height: width * 0.6, resizeMode: 'contain', marginHorizontal: 'auto', marginTop: 60 }} />
+          <Text style={styles.emptyCartText}>Your cart is empty!</Text>
+        </View>
       ) : (
         <>
           <View style={{ paddingHorizontal: 18, backgroundColor: '#fff', paddingBottom: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -172,13 +202,15 @@ const CartScreen: React.FC = () => {
               </TouchableWithoutFeedback>
               <Text style={{ fontSize: 16 }}>All</Text>
             </View>
-            <View style={{ flexDirection: 'row' }}>
-              {selectAll ? (
-                <>
-                  <Text style={{ fontSize: 14, textAlignVertical: 'center', color: 'red' }}>Delete</Text>
-                  <Ionicons name='trash-outline' size={20} color='red' />
-                </>
-              ) : null}
+            <View>
+              {selectedItems.length > 0 && (
+                <TouchableOpacity onPress={deleteAll}>
+                  <View style={{ flexDirection: 'row' }}>
+                    <Text style={{ fontSize: 14, textAlignVertical: 'center', color: 'red' }}>Delete All</Text>
+                    <Ionicons name='trash-outline' size={20} color='red' />
+                  </View>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
           <FlatList
@@ -194,30 +226,79 @@ const CartScreen: React.FC = () => {
                 handleUpdateCart={handleUpdateCart}
               />
             )}
-            keyExtractor={(item) => item.variant_id.toString()}
+            keyExtractor={(item) => item.cart_id.toString()}
             contentContainerStyle={styles.listContainer}
           />
+
+
+          <View style={styles.totalContainer}>
+            <View>
+              <Text style={styles.totalAmountText}>Total Amount</Text>
+              <Text style={styles.totalText}>₱{totalAmount.toFixed(2)}</Text>
+            </View>
+            <TouchableOpacity onPress={handleCheckout} style={styles.checkoutButton}>
+              <Text style={styles.checkoutText}>Checkout</Text>
+            </TouchableOpacity>
+          </View>
+          {modalVisible && (
+            <UpdateModal
+              visible={modalVisible}
+              onClose={closeModal}
+              variants={variants}
+              variant={variant}
+              price={variant?.product_variant.products.product_price}
+              discount={variant?.product_variant.products.product_discount}
+            />
+          )}
         </>
       )}
-      <View style={styles.totalContainer}>
-        <View>
-          <Text style={styles.totalAmountText}>Total Amount</Text>
-          <Text style={styles.totalText}>₱{totalAmount.toFixed(2)}</Text>
+      {/* Delete Item Modal */}
+      <Modal
+        transparent={true}
+        visible={deleteItemModalVisible}
+        animationType="fade"
+        onRequestClose={() => setDeleteItemModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Ionicons name="warning-outline" size={40} color="orange" />
+            <Text style={styles.modalTitle}>Remove Item</Text>
+            <Text style={styles.modalDescription}>Are you sure you want to remove this item from your cart?</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setDeleteItemModalVisible(false)}>
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.confirmButton} onPress={confirmDeleteItem}>
+                <Text style={styles.buttonText}>Remove</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-        <TouchableOpacity onPress={handleCheckout} style={styles.checkoutButton}>
-          <Text style={styles.checkoutText}>Checkout</Text>
-        </TouchableOpacity>
-      </View>
-      {modalVisible ? (
-        <UpdateModal
-          visible={modalVisible}
-          onClose={closeModal}
-          variants={variants}
-          variant={variant}
-          price={variant?.product_variant.products.product_price}
-          discount={variant?.product_variant.products.product_discount}
-        />
-      ) : null}
+      </Modal>
+
+      {/* Delete All Modal */}
+      <Modal
+        transparent={true}
+        visible={deleteAllModalVisible}
+        animationType="fade"
+        onRequestClose={() => setDeleteAllModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Ionicons name="trash-outline" size={40} color="red" />
+            <Text style={styles.modalTitle}>Delete Selected Items</Text>
+            <Text style={styles.modalDescription}>Are you sure you want to delete all selected items from your cart?</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setDeleteAllModalVisible(false)}>
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.confirmButton} onPress={confirmDeleteAll}>
+                <Text style={styles.buttonText}>Delete All</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -266,6 +347,54 @@ const styles = StyleSheet.create({
   },
   checkbox: {
     marginRight: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginVertical: 10,
+  },
+  modalDescription: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  cancelButton: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 10,
+    marginRight: 5,
+    backgroundColor: '#ccc',
+    borderRadius: 5,
+  },
+  confirmButton: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 10,
+    marginLeft: 5,
+    backgroundColor: 'red',
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 

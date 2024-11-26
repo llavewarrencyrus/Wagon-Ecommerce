@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Dispatch, SetStateAction } from 'react';
 import { Modal, View, Text, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, Image, Dimensions, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/Colors';
 import { addToCart } from '@/data/data';
 import { CartItemProps } from '@/types/types';
+import LottieView from 'lottie-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -49,13 +50,15 @@ const ProductModal: React.FC<ProductModalProps> = ({ visible, onClose, colors, s
 
     const [isLoading, setIsLoading] = useState(false);
 
-    const [quantity, setQuantity] = useState(1);
+    const [quantity, setQuantity] = useState<number>(1);
 
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [selectedDimensions, setSelectedDimension] = useState<string | null>(null);
 
-    const [selectVariant, setVariant] = useState<string | undefined>('')
+    const [selectVariant, setVariant] = useState<string | undefined>('');
+
+    const [showLottie, setShowLottie] = useState<boolean>(false);
 
     const colorBtn = colors.map(color => ({
         label: color.color,
@@ -124,13 +127,30 @@ const ProductModal: React.FC<ProductModalProps> = ({ visible, onClose, colors, s
 
         if (selectVariant) {
             setIsLoading(true);
-            const data: CartItemProps | null = await addToCart(userId, selectVariant);
+            const data: CartItemProps | null = await addToCart(userId, selectVariant, quantity);
 
             setIsLoading(false);
 
             if (data) {
-                setCartItems((prevCartItems) => [data, ...prevCartItems]);
-                Alert.alert('Success', 'Item added to cart!');
+                setCartItems((prevCartItems) => {
+                    const existingItemIndex = prevCartItems.findIndex(
+                        (item) => item.cart_id === data.cart_id
+                    );
+
+                    if (existingItemIndex !== -1) {
+
+                        const updatedCartItems = [...prevCartItems];
+                        updatedCartItems[existingItemIndex].quantity = data.quantity;
+                        return updatedCartItems;
+                    } else {
+                        return [data, ...prevCartItems];
+                    }
+                }
+                );
+
+                setShowLottie(true);
+
+                setTimeout(() => setShowLottie(false), 2300);
             } else {
                 Alert.alert('Error', 'Could not add item to cart. Please try again.');
             }
@@ -162,7 +182,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ visible, onClose, colors, s
 
         return <Text style={{ color: Colors.secondary }}>Available Stock: {stocks?.product_quantity ? stocks.product_quantity : 'Out Of Stock'}</Text>;
     };
-    
+
     return (
         <Modal
             animationType="slide"
@@ -302,6 +322,27 @@ const ProductModal: React.FC<ProductModalProps> = ({ visible, onClose, colors, s
                     </TouchableOpacity>
                 </View>
             </TouchableWithoutFeedback>
+            {showLottie ? (
+                <View style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 999,
+                }}>
+                    <Image
+                        source={require('@/assets/loader/addedCart.gif')}
+                        style={{ width: 150, height: 150, }}
+                    />
+                    <Text style={{ color: '#fff', fontSize: 16, textAlign: 'center', marginTop: 10 }}>
+                        Added to cart successfully!
+                    </Text>
+                </View>
+            ) : null}
         </Modal>
     );
 };

@@ -205,9 +205,12 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, variants, v
                         style={styles.modalView}
                         onPress={() => { }}
                     >
-                        <TouchableOpacity style={styles.closeModal} onPress={handleClose}>
-                            <Text style={{ fontSize: 25, color: Colors.secondary }}>X</Text>
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', width: '95%', paddingBottom: 5, marginBottom: 10, borderBottomWidth: 0.8, borderColor: '#d0d0d0' }}>
+                            <Text style={{ width: '90%' }}></Text>
+                            <TouchableOpacity style={styles.closeModal} onPress={onClose}>
+                                <Text style={{ fontSize: 25, color: Colors.secondary, textAlign: 'center' }}>X</Text>
+                            </TouchableOpacity>
+                        </View>
 
                         <View style={{ height: '100%', width: '100%' }}>
                             <View style={{ flexDirection: 'row' }}>
@@ -233,38 +236,42 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, variants, v
                                 </View>
                             </View>
                             <View>
-                                <View>
-                                    <Text style={{ paddingVertical: 10, color: Colors.text }}>Color:</Text>
-                                    <ButtonMultiselect
-                                        layout={ButtonLayout.GRID}
-                                        buttons={colorBtn}
-                                        selectedButtons={selectedColor}
-                                        onButtonSelected={handleColorSelected}
-                                        buttonStyle={{ padding: 100, margin: 0 }}
-                                        textStyle={{ fontSize: 14, padding: 0 }}
-                                        containerStyle={{ padding: 0 }}
-                                        selectedColors={{ backgroundColor: Colors.selectHighlight, borderColor: Colors.border, textColor: '#ffff' }}
-                                    />
-                                </View>
-                                <View>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 }}>
-                                        <Text style={{ color: Colors.text }}>Size:</Text>
-                                        {selectedDimensions && (
-                                            <Text style={styles.dimensionsText}>{selectedDimensions}</Text>
-                                        )}
+                            <View>
+                                        <Text style={{ paddingVertical: 10, color: Colors.text, fontSize: 20 }}>Color{colors.length > 1 ? 's' : ''}</Text>
+                                        <ButtonMultiselect
+                                            layout={ButtonLayout.GRID}
+                                            buttons={colorBtn}
+                                            selectedButtons={selectedColor}
+                                            onButtonSelected={handleColorSelected}
+                                            buttonStyle={{ padding: 100, margin: 0 }}
+                                            textStyle={{ fontSize: 14, padding: 0 }}
+                                            containerStyle={{ paddingHorizontal: 20 }}
+                                            selectedColors={{ backgroundColor: Colors.selectHighlight, borderColor: Colors.border, textColor: '#ffff' }}
+                                        />
                                     </View>
-                                    <ButtonMultiselect
-                                        layout={ButtonLayout.GRID}
-                                        buttons={sizeBtn}
-                                        selectedButtons={selectedSize}
-                                        onButtonSelected={handleSizeSelected}
-                                        buttonStyle={{ padding: 100, margin: 0 }}
-                                        textStyle={{ fontSize: 14, padding: 0 }}
-                                        containerStyle={{ padding: 0 }}
-                                        selectedColors={{ backgroundColor: Colors.selectHighlight, borderColor: Colors.border, textColor: '#ffff' }}
-                                    />
-                                </View>
-                                <View>
+                                    <View>
+                                        <View style={{ flexDirection: 'column', paddingVertical: 10 }}>
+                                            <Text style={{ fontSize: 20, color: Colors.text }}>Available Size{sizes.length > 1 ? 's' : ''}</Text>
+
+
+                                        </View>
+                                        <View style={{ margin: 'auto' }}>
+                                            <ButtonMultiselect
+                                                layout={ButtonLayout.GRID}
+                                                buttons={sizeBtn}
+                                                selectedButtons={selectedSize}
+                                                onButtonSelected={handleSizeSelected}
+                                                buttonStyle={{ padding: 100, margin: 0, borderRadius: 16, width: '30%' }}
+                                                textStyle={{ fontSize: 14, padding: 0 }}
+                                                containerStyle={{ width: '70%', padding: 0 }}
+                                                selectedColors={{ backgroundColor: Colors.selectHighlight, borderColor: Colors.border, textColor: '#ffff' }}
+                                            />
+                                        </View>
+                                        <Text style={styles.dimensionsText}>
+                                            {selectedDimensions && (selectedDimensions)}
+                                        </Text>
+                                    </View>
+                                <View style={{ paddingTop: 20 }}>
                                     <TouchableOpacity
                                         onPress={handleUpdateCart}
                                         disabled={handleDisable()}
@@ -310,6 +317,8 @@ const styles = StyleSheet.create({
     },
     dimensionsText: {
         color: Colors.primary,
+        textAlign: 'center',
+        paddingTop: 10
     },
     productContainer: {
         width: (width / 2) - 8,
@@ -329,7 +338,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 0,
         width: width,
-        padding: 20,
+        padding: 15,
+        paddingTop: 5,
         backgroundColor: 'white',
         borderTopRightRadius: 10,
         borderTopLeftRadius: 10,
@@ -350,7 +360,7 @@ const styles = StyleSheet.create({
     closeButton: {
         backgroundColor: Colors.button,
         padding: 10,
-        borderRadius: 5,
+        borderRadius: 20,
     },
     buttonText: {
         color: 'white',
@@ -358,10 +368,8 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     closeModal: {
-        position: 'absolute',
-        top: 7,
-        right: 15,
-        zIndex: 99
+        width: '10%',
+
     },
     cartImage: {
         width: width / 3,
@@ -388,6 +396,11 @@ const styles = StyleSheet.create({
     },
     buttonDisabled: {
         backgroundColor: Colors.buttonDisabled
+    },
+    quantityBtn: {
+        paddingHorizontal: 15,
+        paddingVertical: 5,
+        backgroundColor: Colors.button
     }
 });
 

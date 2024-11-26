@@ -105,6 +105,19 @@ export interface CartItemProps {
   quantity: number;
 }
 
+export interface AddressProps {
+  id?: string;
+  user_id?: string;
+  name:string;
+  phone:string;
+  house_number_street: string;
+  barangay: string;
+  city_municipality: string;
+  province: string;
+  postal_code: string;
+  prefer: boolean;
+}
+
 //Types
 export type RootStackParamList = {
   Home: undefined;
@@ -114,6 +127,8 @@ export type RootStackParamList = {
   SellerChat: { senderId: string };
   Search: { value?: string };
   Refresh: { refresh?: boolean };
+  Address: { id?: string };
+  CheckOut: {item: CartItemProps[]};
 };
 
 export type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -123,5 +138,9 @@ export type SearchScreenProp = RouteProp<RootStackParamList, 'Search'>;
 export type RefreshScreenProp = RouteProp<RootStackParamList, 'Refresh'>;
 
 export type ProductScreenRouteProp = RouteProp<RootStackParamList, 'Product'>;
+
+export type AddressScreenRouteProp = RouteProp<RootStackParamList, 'Address'>;
+
+export type CheckOutScreenRouteProp = RouteProp<RootStackParamList, 'CheckOut'>;
 
 export type SellerMessagesNavigationProp = StackNavigationProp<RootStackParamList, 'SellerMessages'>;
