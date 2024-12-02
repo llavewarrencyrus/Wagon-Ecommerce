@@ -217,7 +217,7 @@ const chartConfig = {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f8f8',
+        backgroundColor: '#f5f5f5', // Softer background
     },
     scrollContainer: {
         paddingHorizontal: 20,
@@ -227,38 +227,53 @@ const styles = StyleSheet.create({
         marginVertical: 20,
     },
     segmentedControl: {
-        borderRadius: 5,
-        height: 40,
+        borderRadius: 10, // Rounded edges
+        height: 45,
         marginHorizontal: 10,
-        color: '#fabb00',
+        color: '#e6a100',
     },
     section: {
-        marginBottom: 10,  // Spacing between sections
+        marginBottom: 20, // Increased spacing
+        backgroundColor: '#ffffff',
+        borderRadius: 16,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4, // Elevation for Android
     },
     title: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 20,
+        fontWeight: '600',
         marginBottom: 10,
         color: '#333',
-        textAlign: 'center',  // Center the title
+        textAlign: 'center',
     },
     title2: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#333',
-        textAlign: 'center',  // Center the title
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#555',
+        textAlign: 'center',
+        marginBottom: 10,
     },
     chartsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        flexWrap: 'wrap',  // Allows wrapping if there's not enough space
+        flexWrap: 'wrap',
         marginBottom: 30,
     },
     chartWrapper: {
-        width: '48%',  // Adjust width for side-by-side layout
-        backgroundColor: 'white',
+        width: '48%',
+        backgroundColor: '#ffffff',
         borderRadius: 16,
-        margin: '1%',  // Space between charts
+        padding: 15,
+        margin: '1%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
     },
     chart: {
         marginVertical: 10,
@@ -266,39 +281,30 @@ const styles = StyleSheet.create({
     },
     legendContainer: {
         flexDirection: 'row',
-        flexWrap: 'wrap',  // Allows wrapping of legends
+        flexWrap: 'wrap',
         justifyContent: 'center',
         marginTop: 10,
-        paddingStart: 3,
-        
     },
     legendItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10,
-        marginRight: 15,  // Space between legend items
+        marginBottom: 8,
+        marginHorizontal: 5,
     },
     legendLabel: {
         fontSize: 12,
-        color: '#7F7F7F',
+        color: '#555',
+        marginLeft: 5, // Space between color and label
     },
     legendColor: {
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
+        width: 16,
+        height: 16,
+        borderRadius: 8,
     },
     dataValue: {
         fontSize: 14,
-        fontWeight: 'bold',
+        fontWeight: '600',
         color: '#333',
-        marginBottom: 5,
+        textAlign: 'center',
     },
 });
