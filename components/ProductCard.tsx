@@ -1,149 +1,166 @@
-import React, { useState } from 'react';
-import { View, Image, Text, ScrollView, StyleSheet, Dimensions, Pressable } from 'react-native';
+import React from 'react';
+import { View, Image, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { StarRatingDisplay } from 'react-native-star-rating-widget';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { ProductCardProps } from '@/types/types';
 
 const { width } = Dimensions.get('window');
 
-const calculateDiscountedPrice = (price: number, discount: number | undefined): number => {
-  if (!discount) return price;
-
+const calculateDiscountedPrice = (price: number, discount?: number): number => {
+  if (!discount || discount <= 0) return price;
   return price * (1 - discount / 100);
 };
 
-const ProductCard: React.FC<ProductCardProps> = ({ imageUri, title, price, id, discount, rating }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
+const formatPrice = (price: number): string => {
+  return `₱${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+const ProductCard: React.FC<ProductCardProps> = ({
+  imageUri,
+  title,
+  price,
+  id,
+  discount,
+  rating,
+}) => {
   const router = useRouter();
 
-  const priceNumber = price;
-  const finalPrice = calculateDiscountedPrice(priceNumber, discount);
-
-  const onScroll = (event:any) => {
-    const contentOffsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.floor(contentOffsetX / width);
-    setActiveIndex(index);
-  };
+  const finalPrice = calculateDiscountedPrice(price, discount);
+  const primaryImage =
+    Array.isArray(imageUri) && imageUri.length > 0
+      ? imageUri[0]
+      : typeof imageUri === 'string' && imageUri
+      ? imageUri
+      : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80';
 
   return (
-    <View style={styles.productCard} >
-      {discount ? (
-        <View style={styles.discount}>
-          <Text style={{ color: 'white' }}>{discount}% OFF</Text>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => router.push(`/ProductScreen?id=${id}`)}
+      activeOpacity={0.88}
+    >
+      {/* Product Image Thumbnail */}
+      <View style={styles.imageWrap}>
+        <Image source={{ uri: primaryImage }} style={styles.productImage} />
+        {discount ? (
+          <View style={styles.discountBadge}>
+            <Text style={styles.discountBadgeText}>-{discount}%</Text>
+          </View>
+        ) : null}
+      </View>
+
+      {/* Product Details */}
+      <View style={styles.cardBody}>
+        <Text style={styles.productTitle} numberOfLines={2}>
+          {title}
+        </Text>
+
+        {/* Rating & Sales Row */}
+        <View style={styles.metaRow}>
+          <View style={styles.ratingBadge}>
+            <Ionicons name="star" size={11} color="#f59e0b" style={{ marginRight: 2 }} />
+            <Text style={styles.ratingText}>{(rating || 4.8).toFixed(1)}</Text>
+          </View>
         </View>
-      ) : (
-        <View></View>
-      )}
 
-      <ScrollView
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-      >
-        {(imageUri && imageUri.length > 0 ? imageUri : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80']).map((item, index) => (
-          <View key={index} style={styles.imageContainer}>
-            <Pressable onPress={() => router.push(`/ProductScreen?id=${id}`)}>
-              <Image source={{uri: item}} style={styles.productImage} />
-            </Pressable>
-          </View>
-        ))}
-      </ScrollView>
-
-      <Pressable onPress={() => router.push(`/ProductScreen?id=${id}`)}>
-        <View style={styles.productDesc}>
-          <Text style={styles.productTitle} numberOfLines={2}>{title}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={{ color: Colors.star, marginRight: 4, fontSize: 13 }}>{rating}</Text>
-            <StarRatingDisplay rating={rating} starSize={14} color={Colors.star} starStyle={{ width: 0, height: '100%' }} />
-          </View>
+        {/* Price Row */}
+        <View style={styles.priceContainer}>
+          <Text style={styles.finalPrice}>{formatPrice(finalPrice)}</Text>
           {discount ? (
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 2 }}>
-              <Text style={styles.discountedPrice}>₱{finalPrice.toFixed(2)}</Text>
-              <Text style={styles.originalPrice}>₱{priceNumber.toFixed(2)}</Text>
-            </View>
-          ) : (
-            <Text style={styles.productPrice}>₱{priceNumber.toFixed(2)}</Text>
-          )}
+            <Text style={styles.originalPrice}>{formatPrice(price)}</Text>
+          ) : null}
         </View>
-      </Pressable>
-    </View>
-
+      </View>
+    </TouchableOpacity>
   );
 };
 
+export default ProductCard;
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  productCard: {
-    width: (width / 2)- 8,
-    height: 'auto',
-    marginBottom: 8,
-    borderRadius: 10,
+  card: {
+    width: (width / 2) - 12,
     backgroundColor: '#fff',
+    borderRadius: 12,
     overflow: 'hidden',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    elevation: 1.5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
   },
-  imageContainer: {
-    width: (width / 2) - 8,
-    height: width * 0.60,
+  imageWrap: {
+    width: '100%',
+    height: width * 0.44,
+    backgroundColor: '#f3f4f6',
+    position: 'relative',
   },
   productImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
   },
-  productDesc: {
-    paddingHorizontal: 10,
-    paddingTop: 3,
-    paddingBottom: 15,
+  discountBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: '#e11d48',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
-  productTitle: {
-    fontSize: 14,
-    marginTop: 5,
-  },
-  productPrice: {
-    fontSize: 16,
+  discountBadgeText: {
+    color: '#fff',
+    fontSize: 10,
     fontWeight: 'bold',
   },
-  pagination: {
+  cardBody: {
+    padding: 10,
+  },
+  productTitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#1f2937',
+    lineHeight: 18,
+    marginBottom: 6,
+    minHeight: 36,
+  },
+  metaRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 5,
+    alignItems: 'center',
+    marginBottom: 6,
   },
-  dot: {
-    height: 8,
-    width: 8,
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
     borderRadius: 4,
-    backgroundColor: Colors.secondary,
-    marginHorizontal: 4,
   },
-  discount: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    paddingHorizontal: 10,
-    borderBottomLeftRadius: 10,
-    paddingVertical: 5,
-    backgroundColor: Colors.discount,
-    zIndex: 99
+  ratingText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#b45309',
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    flexWrap: 'wrap',
+  },
+  finalPrice: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginRight: 6,
   },
   originalPrice: {
     fontSize: 11,
-    textAlignVertical: 'bottom',
-    color: Colors.priceOriginal,
+    color: '#9ca3af',
     textDecorationLine: 'line-through',
   },
-  discountedPrice: {
-    fontSize: 16,
-    paddingRight: 5,
-    fontWeight: 'bold',
-    color: Colors.discount,
-  },
 });
-
-export default ProductCard;

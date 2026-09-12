@@ -2,9 +2,10 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartProvider";
 import { Colors } from "@/constants/Colors";
 import DummySearch from "@/components/DummySearch";
-import { ActivityIndicator, View, Dimensions, TouchableOpacity } from "react-native";
+import { ActivityIndicator, View, Dimensions, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 
 import { HomeScreen as Index } from "@/app/(buyer)/Index";
@@ -36,6 +37,9 @@ export default function TabLayout() {
 
 function UserLayoutTabs() {
   const router = useRouter();
+  const { cartItems } = useCart();
+  const cartCount = cartItems.length;
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -48,7 +52,7 @@ function UserLayoutTabs() {
               iconName = focused ? "home" : "home-outline";
               break;
             case "Category":
-              iconName = focused ? "search" : "search-outline";
+              iconName = focused ? "grid" : "grid-outline";
               break;
             case "Cart":
               iconName = focused ? "cart" : "cart-outline";
@@ -67,22 +71,47 @@ function UserLayoutTabs() {
             />
           );
         },
-        tabBarActiveTintColor: Colors.icon,
-        tabBarInactiveTintColor: Colors.secondary,
-        tabBarStyle: { height: 60 },
-        tabBarLabelStyle: { fontSize: 12, marginBottom: 10 },
-        tabBarIconStyle: { marginTop: 10 },
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: "#9ca3af",
+        tabBarStyle: { height: 60, backgroundColor: '#fff', borderTopColor: '#f0f0f0' },
+        tabBarLabelStyle: { fontSize: 11, marginBottom: 8, fontWeight: '600' },
+        tabBarIconStyle: { marginTop: 6 },
       })}>
       <Tab.Screen
         name="Home"
         component={Index}
         options={{
           headerTitle: () => (
-            <View style={{ width: width * 0.8 }}>
+            <View style={{ width: width * 0.68 }}>
               <DummySearch />
             </View>
           ),
+          headerStyle: { backgroundColor: "#fff" },
           headerShadowVisible: false,
+          headerRight: () => (
+            <View style={{ flexDirection: "row", alignItems: "center", marginRight: 12 }}>
+              <TouchableOpacity
+                onPress={() => router.push("/Cart")}
+                style={tabHeaderStyles.iconBtn}
+              >
+                <Ionicons name="cart-outline" size={22} color={Colors.title} />
+                {cartCount > 0 && (
+                  <View style={tabHeaderStyles.cartBadge}>
+                    <Text style={tabHeaderStyles.cartBadgeText}>
+                      {cartCount > 99 ? "99+" : cartCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => router.push("/Chat")}
+                style={[tabHeaderStyles.iconBtn, { marginLeft: 6 }]}
+              >
+                <Ionicons name="chatbubbles-outline" size={22} color={Colors.title} />
+              </TouchableOpacity>
+            </View>
+          ),
         }}
       />
       <Tab.Screen
@@ -90,7 +119,7 @@ function UserLayoutTabs() {
         component={Category}
         options={{
           headerTitle: () => (
-            <View style={{ width: width * 0.8 }}>
+            <View style={{ width: width * 0.78 }}>
               <DummySearch />
             </View>
           ),
@@ -101,11 +130,11 @@ function UserLayoutTabs() {
           headerRight: () => (
             <TouchableOpacity
               onPress={() => router.push("/Chat")}
-              style={{ backgroundColor: Colors.tertiary, padding: 5, marginRight: 15, borderRadius: 20 }}>
+              style={{ backgroundColor: "#f3ece7", padding: 7, marginRight: 15, borderRadius: 20 }}>
               <Ionicons
                 name="chatbubbles-outline"
-                size={24}
-                color="black"
+                size={20}
+                color={Colors.primary}
               />
             </TouchableOpacity>
           ),
@@ -114,6 +143,10 @@ function UserLayoutTabs() {
       <Tab.Screen
         name="Cart"
         component={Cart}
+        options={{
+          tabBarBadge: cartCount > 0 ? cartCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: Colors.primary, fontSize: 10 },
+        }}
       />
       <Tab.Screen
         name="Profile"
@@ -123,6 +156,37 @@ function UserLayoutTabs() {
     </Tab.Navigator>
   );
 }
+
+const tabHeaderStyles = StyleSheet.create({
+  iconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#f3f4f6",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  cartBadge: {
+    position: "absolute",
+    top: -3,
+    right: -3,
+    backgroundColor: Colors.primary,
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "#fff",
+  },
+  cartBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+});
 
 function SellerLayoutTabs() {
   return (

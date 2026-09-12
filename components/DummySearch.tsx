@@ -1,34 +1,28 @@
-import React, { useState } from "react";
-import { Pressable, TextInput, View, StyleSheet, Dimensions } from "react-native";
+import React from "react";
+import { Pressable, Text, View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { DummySearch } from "@/types/types";
-import { useNavigation } from '@react-navigation/native';
-
-const { width } = Dimensions.get('window');
 
 const DummySearchBar: React.FC<DummySearch> = ({ value }) => {
   const router = useRouter();
-  const navigation = useNavigation();
 
   const goToSearchScreen = () => {
     const encoded = value ? encodeURIComponent(value) : '';
     router.push(`/SearchScreen?value=${encoded}`);
   };
 
-  
-
   return (
     <View style={styles.container}>
       <Pressable onPress={goToSearchScreen} style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Search..."
-          editable={false}
-          value={value}
-        />
-        <Ionicons name="search" size={20} style={styles.searchIcon} />
+        <Ionicons name="search-outline" size={18} color="#888" style={styles.leftIcon} />
+        <Text style={[styles.placeholderText, !!value && styles.valueText]} numberOfLines={1}>
+          {value || "Search products, brands, styles..."}
+        </Text>
+        <View style={styles.searchPill}>
+          <Ionicons name="arrow-forward" size={14} color="#fff" />
+        </View>
       </Pressable>
     </View>
   );
@@ -44,23 +38,33 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    borderColor: Colors.border,
+    borderColor: '#e5e7eb',
     borderWidth: 1,
-    borderRadius: 30,
-    paddingHorizontal: 10,
-    backgroundColor: "#fff",
-  },
-  input: {
+    borderRadius: 24,
+    paddingLeft: 12,
+    paddingRight: 6,
     height: 40,
-    flex: 1,
-    color: 'black',
+    backgroundColor: "#f9fafb",
   },
-  searchIcon: {
-    backgroundColor: Colors.button,
-    color: '#fff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 20,
+  leftIcon: {
+    marginRight: 8,
+  },
+  placeholderText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#9ca3af',
+  },
+  valueText: {
+    color: '#1f2937',
+    fontWeight: '600',
+  },
+  searchPill: {
+    backgroundColor: Colors.primary,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
