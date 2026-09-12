@@ -317,8 +317,8 @@ const AddProduct = () => {
     for (const variants of variant) {
       const variantData = {
         variant_id: variants.variant_id,
-        product_color: variants.color_id,
-        product_size: variants.size_id,
+        product_color_id: variants.color_id,
+        product_size_id: variants.size_id,
         product_id: product_id,
         product_quantity: variants.quantity,
       };
