@@ -50,6 +50,8 @@ export interface StoreProfile {
 
 export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
+export type BuyerOrder = SellerOrder;
+
 export interface SellerOrder {
   id: string;
   user_id: string;
@@ -193,6 +195,7 @@ export type RootStackParamList = {
   Refresh: { refresh?: boolean };
   Address: { id?: string };
   CheckOut: { item: CartItemProps[] };
+  OrdersScreen: { initialStatus?: OrderStatus | 'all' } | undefined;
 };
 
 export type NavigationProp = StackNavigationProp<RootStackParamList>;

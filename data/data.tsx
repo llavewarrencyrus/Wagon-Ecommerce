@@ -25,7 +25,7 @@ export const getProducts = async (
     `);
 
   if (filters.category) {
-    query = query.contains("product_category", [filters.category]).contains("product_category", [filters.searchTerm]);
+    query = query.contains("product_category", [filters.category]);
   }
 
   if (filters.size) {
@@ -40,8 +40,8 @@ export const getProducts = async (
     query = query.eq("product_material", filters.material);
   }
 
-  if (filters.searchTerm && !filters.category) {
-    query = query.or(`product_name.ilike.%${filters.searchTerm}%`);
+  if (filters.searchTerm) {
+    query = query.or(`product_name.ilike.%${filters.searchTerm}%,product_description.ilike.%${filters.searchTerm}%`);
   }
 
   if (filters.sortBy) {
@@ -329,6 +329,52 @@ export const getSellerOrders = async (sellerId: string, status?: string) => {
     return [];
   }
   return data || [];
+};
+
+export const getBuyerOrders = async (userId: string, status?: string) => {
+  let query = supabase
+    .from("orders")
+    .select(
+      `
+      *,
+      addresses (*),
+      product_variant (
+        variant_id,
+        product_id,
+        product_quantity,
+        products ( product_id, product_name, product_price, product_discount, product_image ),
+        product_color ( id, color, image ),
+        product_size ( id, size, dimension )
+      )
+    `
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (status && status !== "all") {
+    query = query.eq("status", status);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    console.error("Error fetching buyer orders:", error.message);
+    return [];
+  }
+  return data || [];
+};
+
+export const cancelBuyerOrder = async (orderId: string) => {
+  const { data, error } = await supabase
+    .from("orders")
+    .update({ status: "cancelled", updated_at: new Date().toISOString() })
+    .eq("id", orderId)
+    .select();
+
+  if (error) {
+    console.error("Error cancelling order:", error.message);
+    throw new Error(error.message);
+  }
+  return data;
 };
 
 export const updateOrderStatus = async (

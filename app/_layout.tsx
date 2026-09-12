@@ -357,9 +357,10 @@ export default function RootLayout() {
                     }}
                   />
                   <Stack.Screen name="(buyer)/HelpCenter" />
-                  <Stack.Screen name="(buyer)/CheckOutScreen" />
-                  <Stack.Screen name="(buyer)/AddressScreen" />
-                  <Stack.Screen name="(buyer)/AddEditAddress" />
+                  <Stack.Screen name="(buyer)/CheckOutScreen" options={{ title: "Checkout" }} />
+                  <Stack.Screen name="(buyer)/OrdersScreen" options={{ title: "My Orders" }} />
+                  <Stack.Screen name="(buyer)/AddressScreen" options={{ title: "My Addresses" }} />
+                  <Stack.Screen name="(buyer)/AddEditAddress" options={{ title: "Address Details" }} />
 
                   {/* Seller Screens */}
                   <Stack.Screen

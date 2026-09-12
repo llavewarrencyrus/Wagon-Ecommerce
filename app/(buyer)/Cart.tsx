@@ -150,37 +150,33 @@ const CartScreen: React.FC = () => {
 
   const handleCheckout = () => {
     const itemstoCheckout = cartItems.filter((item) => selectedItems.includes(item.cart_id));
-    setSelectedPurchase(itemstoCheckout);
-    if (selectedPurchase.length === 0) {
+    if (itemstoCheckout.length === 0) {
       Alert.alert("No Items Selected", "Please select at least one item to proceed to checkout.");
       return;
     }
+    setSelectedPurchase(itemstoCheckout);
     router.push("/CheckOutScreen");
   };
 
   const incrementQuantity = (item: CartItemProps) => {
     updateCartItemQuantity(item.cart_id, item.quantity + 1);
-    {
-      selectedItems.includes(item.variant_id)
-        ? setTotalAmount(
-            (amount) =>
-              amount +
-              item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100)
-          )
-        : null;
+    if (selectedItems.includes(item.cart_id)) {
+      setTotalAmount(
+        (amount) =>
+          amount +
+          item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100)
+      );
     }
   };
 
   const decrementQuantity = (item: CartItemProps) => {
     updateCartItemQuantity(item.cart_id, item.quantity - 1);
-    {
-      selectedItems.includes(item.cart_id)
-        ? setTotalAmount(
-            (amount) =>
-              amount -
-              item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100)
-          )
-        : null;
+    if (selectedItems.includes(item.cart_id)) {
+      setTotalAmount(
+        (amount) =>
+          amount -
+          item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100)
+      );
     }
   };
 
@@ -199,18 +195,22 @@ const CartScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {cartItems.length === 0 ? (
-        <View>
+        <View style={styles.emptyCartContainer}>
           <Image
             source={require("@/assets/images/emptyCart.png")}
             style={{
-              width: width * 0.6,
-              height: width * 0.6,
+              width: width * 0.55,
+              height: width * 0.55,
               resizeMode: "contain",
               marginHorizontal: "auto",
-              marginTop: 60,
+              marginTop: 40,
             }}
           />
           <Text style={styles.emptyCartText}>Your cart is empty!</Text>
+          <Text style={styles.emptyCartSubText}>Looks like you haven't added anything to your cart yet.</Text>
+          <TouchableOpacity style={styles.startShoppingButton} onPress={() => router.push("/(tabs)")}>
+            <Text style={styles.startShoppingText}>Start Shopping</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <>
@@ -359,11 +359,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  emptyCartContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
   emptyCartText: {
-    fontSize: 18,
+    fontSize: 20,
+    fontWeight: "bold",
     textAlign: "center",
-    color: Colors.text,
-    marginTop: 20,
+    color: Colors.title,
+    marginTop: 18,
+  },
+  emptyCartSubText: {
+    fontSize: 14,
+    textAlign: "center",
+    color: Colors.subtitle,
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  startShoppingButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 25,
+    elevation: 2,
+  },
+  startShoppingText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "bold",
   },
   listContainer: {
     flexGrow: 1,

@@ -49,8 +49,10 @@ export function HomeScreen() {
 
 
   const fetchProducts = async () => {
+    setLoading(true);
     const fetchedProducts = await getProducts();
-    setProducts(fetchedProducts);
+    setProducts(fetchedProducts || []);
+    setLoading(false);
   };
 
 
@@ -122,7 +124,7 @@ export function HomeScreen() {
       showsVerticalScrollIndicator={false}
       data={products}
       numColumns={2}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item) => item.product_id}
       renderItem={({ item }) => renderProductList({ item })}
       refreshing={refreshing} // Add refreshing prop
       onRefresh={onRefresh} // Add onRefresh prop

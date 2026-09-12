@@ -136,6 +136,57 @@ export default function Account() {
             <Text style={styles.profileEmail}>{email}</Text>
           </View>
           <View style={styles.optionsContainer}>
+            {/* Quick Orders Status Tracker */}
+            <View style={styles.ordersSectionCard}>
+              <View style={styles.ordersSectionHeader}>
+                <Text style={styles.ordersSectionTitle}>My Orders</Text>
+                <TouchableOpacity onPress={() => router.push("/OrdersScreen")}>
+                  <Text style={styles.viewAllOrdersText}>View All {'>'}</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.orderShortcutsRow}>
+                <TouchableOpacity
+                  style={styles.orderShortcutBtn}
+                  onPress={() => router.push({ pathname: "/OrdersScreen", params: { initialStatus: "pending" } })}
+                >
+                  <View style={styles.shortcutIconWrap}>
+                    <Ionicons name="card-outline" size={22} color={Colors.primary} />
+                  </View>
+                  <Text style={styles.shortcutLabel}>To Pay</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.orderShortcutBtn}
+                  onPress={() => router.push({ pathname: "/OrdersScreen", params: { initialStatus: "processing" } })}
+                >
+                  <View style={styles.shortcutIconWrap}>
+                    <Ionicons name="cube-outline" size={22} color={Colors.primary} />
+                  </View>
+                  <Text style={styles.shortcutLabel}>Processing</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.orderShortcutBtn}
+                  onPress={() => router.push({ pathname: "/OrdersScreen", params: { initialStatus: "shipped" } })}
+                >
+                  <View style={styles.shortcutIconWrap}>
+                    <Ionicons name="car-outline" size={22} color={Colors.primary} />
+                  </View>
+                  <Text style={styles.shortcutLabel}>To Receive</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.orderShortcutBtn}
+                  onPress={() => router.push({ pathname: "/OrdersScreen", params: { initialStatus: "delivered" } })}
+                >
+                  <View style={styles.shortcutIconWrap}>
+                    <Ionicons name="checkmark-done-circle-outline" size={22} color={Colors.primary} />
+                  </View>
+                  <Text style={styles.shortcutLabel}>Completed</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             {/* Seller Center & Mode Switch */}
             <TouchableOpacity
               onPress={async () => {
@@ -183,7 +234,7 @@ export default function Account() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push("/UnderConstruction")}
+              onPress={() => router.push("/OrdersScreen")}
               style={styles.optionItem}>
               <View style={styles.option}>
                 <View style={styles.optionApart}>
@@ -464,5 +515,53 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#777",
     marginTop: 2,
+  },
+  ordersSectionCard: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+    marginBottom: 6,
+  },
+  ordersSectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  ordersSectionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: Colors.title,
+  },
+  viewAllOrdersText: {
+    fontSize: 13,
+    color: Colors.primary,
+    fontWeight: "600",
+  },
+  orderShortcutsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  orderShortcutBtn: {
+    alignItems: "center",
+    width: 70,
+  },
+  shortcutIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#f7f1ec",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  shortcutLabel: {
+    fontSize: 12,
+    color: "#555",
+    fontWeight: "500",
+    textAlign: "center",
   },
 });

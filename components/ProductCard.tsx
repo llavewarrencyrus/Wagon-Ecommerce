@@ -43,7 +43,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ imageUri, title, price, id, d
         onScroll={onScroll}
         scrollEventThrottle={16}
       >
-        {imageUri.map((item, index) => (
+        {(imageUri && imageUri.length > 0 ? imageUri : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80']).map((item, index) => (
           <View key={index} style={styles.imageContainer}>
             <Pressable onPress={() => router.push(`/ProductScreen?id=${id}`)}>
               <Image source={{uri: item}} style={styles.productImage} />
@@ -55,13 +55,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ imageUri, title, price, id, d
       <Pressable onPress={() => router.push(`/ProductScreen?id=${id}`)}>
         <View style={styles.productDesc}>
           <Text style={styles.productTitle} numberOfLines={2}>{title}</Text>
-          <View style={{ flexDirection: 'row' }}>
-            <Text style={{ color: Colors.star, width: 'auto' }}>{rating}</Text>
-            <StarRatingDisplay rating={rating} starSize={15} color={Colors.star} starStyle={{ width: 0, height: '100%' }} />
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ color: Colors.star, marginRight: 4, fontSize: 13 }}>{rating}</Text>
+            <StarRatingDisplay rating={rating} starSize={14} color={Colors.star} starStyle={{ width: 0, height: '100%' }} />
           </View>
           {discount ? (
-            <View >
-              <Text style={styles.discountedPrice}> {finalPrice.toFixed(2)}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 2 }}>
+              <Text style={styles.discountedPrice}>₱{finalPrice.toFixed(2)}</Text>
               <Text style={styles.originalPrice}>₱{priceNumber.toFixed(2)}</Text>
             </View>
           ) : (
