@@ -74,11 +74,16 @@ const CheckOutScreen = () => {
 
     setLoading(true);
     try {
-      const orderData = selectedPurchase.map(item => ({
-        variant_id: item.variant_id,
-        user_id: item.user_id,
-        address_id: selectedAddressId,
-      }));
+      const orderData = selectedPurchase.map(item => {
+        const prod = item.product_variant?.products as any;
+        return {
+          variant_id: item.variant_id,
+          user_id: item.user_id,
+          seller_id: prod?.seller_id || null,
+          address_id: selectedAddressId,
+          status: 'pending',
+        };
+      });
 
       const { error } = await supabase.from('orders').insert(orderData);
 

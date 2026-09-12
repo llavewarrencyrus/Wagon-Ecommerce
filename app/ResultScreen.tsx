@@ -67,8 +67,8 @@ function Result() {
     useEffect(() => {
         const { keyword, category } = route.params;
 
-        setKeyword(keyword);
-        setCategory(category);
+        setKeyword(keyword || '');
+        setCategory(category || '');
     }, [isFocused, route.params]);
 
     useEffect(() => {

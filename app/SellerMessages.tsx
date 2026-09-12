@@ -15,9 +15,10 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { SellerMessagesNavigationProp } from '@/types/types';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Message {
-  messages_id: string;
+  id: string;
   sender: string;
   receiver: string;
   message: string;
@@ -27,91 +28,119 @@ interface Message {
 interface User {
   id: string;
   username: string;
+  profile_picture?: string;
 }
 
 export default function SellerMessages() {
   const router = useRouter();
   const navigation = useNavigation<SellerMessagesNavigationProp>();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [senderInfo, setSenderInfo] = useState<{ [key: string]: User }>({});
-  const [refreshing, setRefreshing] = useState(false); // State for pull-to-refresh
-  const receiver = '95699985-ed4f-491b-9e38-a34c82503ba7';
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('/LoginScreen');
-    } else {
+    } else if (user?.id) {
       fetchMessages();
+
+      // Realtime listener for incoming messages
+      const channel = supabase
+        .channel('seller-messages-list')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `receiver=eq.${user.id}`,
+          },
+          () => {
+            fetchMessages();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   const fetchMessages = async () => {
+    if (!user?.id) return;
     try {
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .neq('sender', receiver)
+        .or(`receiver.eq.${user.id},sender.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
       if (error) {
         throw new Error(`Could not fetch messages: ${error.message}`);
       }
 
-      const latestMessages = getLatestMessagesBySender(data || []);
-      setMessages(latestMessages);
-      fetchSenderInfo(latestMessages);
+      const latestConversations = getLatestMessagesByConversation(data || [], user.id);
+      setMessages(latestConversations);
+      fetchSenderInfo(latestConversations, user.id);
     } catch (error) {
-      Alert.alert('Error', 'Could not fetch messages');
+      console.error('Error fetching messages:', error);
     }
   };
 
-  const getLatestMessagesBySender = (messages: Message[]) => {
-    const latestMessages: { [key: string]: Message } = {};
-    messages.forEach((msg) => {
-      if (!latestMessages[msg.sender]) {
-        latestMessages[msg.sender] = msg;
+  const getLatestMessagesByConversation = (allMessages: Message[], currentUserId: string) => {
+    const conversationMap: { [partnerId: string]: Message } = {};
+
+    allMessages.forEach((msg) => {
+      const partnerId = msg.sender === currentUserId ? msg.receiver : msg.sender;
+      if (!conversationMap[partnerId]) {
+        conversationMap[partnerId] = msg;
       }
     });
-    return Object.values(latestMessages);
+
+    return Object.values(conversationMap);
   };
 
-  const fetchSenderInfo = async (messages: Message[]) => {
-    const senderIds = [...new Set(messages.map((msg) => msg.sender))];
+  const fetchSenderInfo = async (conversationList: Message[], currentUserId: string) => {
+    const partnerIds = [
+      ...new Set(
+        conversationList.map((msg) => (msg.sender === currentUserId ? msg.receiver : msg.sender))
+      ),
+    ];
 
-    if (senderIds.length === 0) {
+    if (partnerIds.length === 0) {
       return;
     }
 
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, username')
-        .in('id', senderIds);
+        .select('id, username, profile_picture')
+        .in('id', partnerIds);
 
       if (error) {
-        throw new Error(`Could not fetch sender info: ${error.message}`);
+        throw new Error(`Could not fetch user info: ${error.message}`);
       }
 
-      const senderData: { [key: string]: User } = {};
-      data?.forEach((user: User) => {
-        senderData[user.id] = user;
+      const infoMap: { [key: string]: User } = {};
+      data?.forEach((u: User) => {
+        infoMap[u.id] = u;
       });
 
-      setSenderInfo(senderData);
+      setSenderInfo(infoMap);
     } catch (error) {
       console.log('Error fetching sender info:', error);
     }
   };
 
-  const handlePress = (senderId: string) => {
-    navigation.navigate('SellerChat', { senderId }); // Pass senderId to SellerChat
+  const handlePress = (partnerId: string) => {
+    navigation.navigate('SellerChat', { senderId: partnerId });
   };
 
   const formatDate = (dateString: string) => {
     const now = new Date();
     const messageDate = new Date(dateString);
-
     const isToday = now.toDateString() === messageDate.toDateString();
 
     const options: Intl.DateTimeFormatOptions = isToday
@@ -122,59 +151,36 @@ export default function SellerMessages() {
   };
 
   const onRefresh = async () => {
-    setRefreshing(true); // Start refreshing animation
-    await fetchMessages(); // Fetch messages again
-    setRefreshing(false); // Stop refreshing animation
+    setRefreshing(true);
+    await fetchMessages();
+    setRefreshing(false);
   };
 
   const renderMessage = ({ item }: { item: Message }) => {
-    const scaleValue = new Animated.Value(1);
-
-    const handlePressIn = () => {
-      Animated.spring(scaleValue, {
-        toValue: 0.96,
-        useNativeDriver: true,
-      }).start();
-    };
-
-    const handlePressOut = () => {
-      Animated.spring(scaleValue, {
-        toValue: 1,
-        useNativeDriver: true,
-      }).start();
-    };
+    const currentUserId = user?.id || '';
+    const partnerId = item.sender === currentUserId ? item.receiver : item.sender;
+    const partner = senderInfo[partnerId];
+    const isOutgoing = item.sender === currentUserId;
 
     return (
-      <Pressable
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        onPress={() => handlePress(item.sender)}
-      >
-        <Animated.View
-          style={[
-            styles.messageContainer,
-            { transform: [{ scale: scaleValue }] },
-          ]}
-        >
+      <Pressable onPress={() => handlePress(partnerId)}>
+        <View style={styles.messageContainer}>
           <View style={styles.messageRow}>
             <View style={styles.circleIcon}>
               <Text style={styles.circleText}>
-                {senderInfo[item.sender]?.username?.[0] || '?'}
+                {partner?.username ? partner.username.charAt(0).toUpperCase() : '?'}
               </Text>
             </View>
             <View style={styles.messageContent}>
-              <Text style={styles.username}>
-                {senderInfo[item.sender]?.username || 'Loading...'}
-              </Text>
-              <Text style={styles.latestMessage}>
+              <Text style={styles.username}>{partner?.username || 'Customer'}</Text>
+              <Text style={styles.latestMessage} numberOfLines={1}>
+                {isOutgoing ? 'You: ' : ''}
                 {item.message}
               </Text>
             </View>
-            <Text style={styles.timestamp}>
-              {formatDate(item.created_at)}
-            </Text>
+            <Text style={styles.timestamp}>{formatDate(item.created_at)}</Text>
           </View>
-        </Animated.View>
+        </View>
       </Pressable>
     );
   };
@@ -183,24 +189,31 @@ export default function SellerMessages() {
     <SafeAreaView style={styles.container}>
       {/* Header Section */}
       <View style={styles.header}>
-        <Text style={styles.headerText}>Chats</Text>
+        <Text style={styles.headerText}>Customer Inquiries</Text>
+        <Text style={styles.headerSub}>Live chats with buyers</Text>
       </View>
+
       {/* Messages List */}
       <FlatList
         data={messages}
         renderItem={renderMessage}
-        keyExtractor={(item) => item.messages_id}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            progressBackgroundColor="#f1f1f1" // Background color of the refresh control
-            colors={['#FF6347']} // Color of the refresh spinner
-            tintColor="#000000" // Color of the refresh spinner on iOS
-            title="Pull to refresh" // Text while refreshing
-            titleColor="#000000" // Text color of the pull-to-refresh message
+            colors={['#5C3A2E']}
           />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyBox}>
+            <Ionicons name="chatbubbles-outline" size={56} color="#C4B0A3" />
+            <Text style={styles.emptyTitle}>No messages yet</Text>
+            <Text style={styles.emptySub}>
+              When prospective buyers inquire about your products, their chats will appear here in real time.
+            </Text>
+          </View>
         }
       />
     </SafeAreaView>
@@ -210,33 +223,39 @@ export default function SellerMessages() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#F8F8F8',
   },
   header: {
-    paddingVertical: 16,
-    backgroundColor: '#f9f9f9',
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 12,
+    backgroundColor: '#FFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-    alignItems: 'center',
+    borderBottomColor: '#ECECEC',
   },
   headerText: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#2E1E17',
+  },
+  headerSub: {
+    fontSize: 12,
+    color: '#777',
+    marginTop: 2,
   },
   listContent: {
     padding: 16,
   },
   messageContainer: {
-    marginBottom: 12,
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: '#fff',
+    marginBottom: 10,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: '#FFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   messageRow: {
     flexDirection: 'row',
@@ -244,44 +263,54 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   circleIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'brown',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#5C3A2E',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
-    shadowColor: 'brown',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.4,
-    shadowRadius: 3,
-    elevation: 2,
   },
   circleText: {
-    color: '#fff',
-    fontSize: 20,
+    color: '#FFF',
+    fontSize: 18,
     fontWeight: 'bold',
   },
   messageContent: {
     flex: 1,
-    flexShrink: 1,
+    marginRight: 8,
   },
   username: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    flexShrink: 1,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#2E1E17',
   },
   latestMessage: {
-    marginTop: 4,
+    marginTop: 3,
     color: '#666',
-    fontSize: 14,
-    lineHeight: 20,
-    flexShrink: 1,
-    maxWidth: '90%',
+    fontSize: 13,
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#999',
+  },
+  emptyBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 80,
+    paddingHorizontal: 30,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#444',
+    marginTop: 16,
+  },
+  emptySub: {
+    fontSize: 13,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 18,
   },
 });

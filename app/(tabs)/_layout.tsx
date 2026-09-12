@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/Colors';
 import DummySearch from '@/components/DummySearch';
@@ -14,6 +13,7 @@ import Category from '../Category';
 import Account from '../Account';
 
 import SellerIndex from '../SellerIndex';
+import SellerOrders from '../SellerOrders';
 import SellerProducts from '../SellerProducts';
 import SellerMessages from '../SellerMessages';
 import SellerAccount from '../SellerAccount';
@@ -23,50 +23,15 @@ const { width } = Dimensions.get('window');
 const Tab = createBottomTabNavigator();
 
 export default function TabLayout() {
-  
+  const { isAuthenticated, activeMode } = useAuth();
 
-  const [isSeller, setIsSeller] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const { isAuthenticated, user } = useAuth();
-
-  useEffect(() => {
-    const checkUser = async () => {
-      setLoading(true);
-      
-      // Check if there's a logged-in user
-      if (!isAuthenticated || !user) {
-        setLoading(false);
-        return;
-      }
-
-      // Check if user is a seller
-      const { data: userData, error } = await supabase.auth.getUser();
-      if (!error && userData?.user?.email === 'seller@wagon.com') {
-        setIsSeller(true);
-      }
-
-      setLoading(false);
-    };
-
-    checkUser();
-  }, [isAuthenticated, user]);
-
-  // Show loading indicator during authentication check
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={Colors.icon} />
-      </View>
-    );
-  }
-
-  // Display UserLayoutTabs if not authenticated
-  if (!isAuthenticated) {
+  // Display UserLayoutTabs if not authenticated or in buyer mode
+  if (!isAuthenticated || activeMode !== 'seller') {
     return <UserLayoutTabs />;
   }
 
-  // Display Seller or User Layout Tabs based on the user's type
-  return isSeller ? <SellerLayoutTabs /> : <UserLayoutTabs />;
+  // Display Seller Layout Tabs when authenticated and in seller mode
+  return <SellerLayoutTabs />;
 }
 
 function UserLayoutTabs() {
@@ -133,31 +98,35 @@ function SellerLayoutTabs() {
             case 'Home':
               iconName = focused ? 'home' : 'home-outline';
               break;
+            case 'Orders':
+              iconName = focused ? 'cube' : 'cube-outline';
+              break;
             case 'Products':
               iconName = focused ? 'bag-handle' : 'bag-handle-outline';
               break;
             case 'Messages':
               iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
               break;
-            case 'Account':
-              iconName = focused ? 'person' : 'person-outline';
+            case 'Store':
+              iconName = focused ? 'storefront' : 'storefront-outline';
               break;
             default:
               iconName = 'home';
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: Colors.icon,
-        tabBarInactiveTintColor: Colors.secondary,
-        tabBarStyle: { height: 60 },
-        tabBarLabelStyle: { fontSize: 12, marginBottom: 10 },
-        tabBarIconStyle: { marginTop: 10 },
+        tabBarActiveTintColor: '#5C3A2E',
+        tabBarInactiveTintColor: '#888',
+        tabBarStyle: { height: 60, backgroundColor: '#FFF' },
+        tabBarLabelStyle: { fontSize: 11, marginBottom: 8, fontWeight: '600' },
+        tabBarIconStyle: { marginTop: 8 },
       })}
     >
-      <Tab.Screen name="Home" component={SellerIndex} options={{ headerShown: true }} />
+      <Tab.Screen name="Home" component={SellerIndex} />
+      <Tab.Screen name="Orders" component={SellerOrders} />
       <Tab.Screen name="Products" component={SellerProducts} />
       <Tab.Screen name="Messages" component={SellerMessages} />
-      <Tab.Screen name="Account" component={SellerAccount} />
+      <Tab.Screen name="Store" component={SellerAccount} />
     </Tab.Navigator>
   );
 }

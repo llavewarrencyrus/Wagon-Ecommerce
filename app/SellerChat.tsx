@@ -1,6 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { useRoute } from '@react-navigation/native'; // Import useRoute
-import { StyleSheet, Button, Text, View, TextInput, Alert, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  Alert,
+  ScrollView,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
@@ -21,163 +31,193 @@ interface User {
 
 export default function SellerChat() {
   const route = useRoute();
-  const { senderId } = route.params as { senderId: string }; // Get senderId from params
+  const navigation = useNavigation();
+  const params = route.params as { senderId: string; initialMessage?: string };
+  const senderId = params?.senderId;
+
   const { isAuthenticated, user } = useAuth();
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(params?.initialMessage || '');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [senderInfo, setSenderInfo] = useState<{ [key: string]: User }>({});
+  const [partnerInfo, setPartnerInfo] = useState<User | null>(null);
+  const [sending, setSending] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      // Handle unauthenticated user
-      return;
-    }
+    if (!isAuthenticated || !user?.id || !senderId) return;
+
     fetchMessages();
-  }, [isAuthenticated, senderId]);
+    fetchPartnerInfo();
+
+    // Supabase Realtime Channel for active conversation
+    const channel = supabase
+      .channel(`seller-chat-${senderId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const newMsg = payload.new as Message;
+          if (
+            (newMsg.sender === user.id && newMsg.receiver === senderId) ||
+            (newMsg.sender === senderId && newMsg.receiver === user.id)
+          ) {
+            setMessages((prev) => [...prev, newMsg]);
+            scrollToBottom();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthenticated, user, senderId]);
+
+  const fetchPartnerInfo = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, username')
+        .eq('id', senderId)
+        .single();
+
+      if (!error && data) {
+        setPartnerInfo(data);
+        navigation.setOptions({ title: data.username || 'Customer' });
+      }
+    } catch (e) {
+      console.error('Error fetching partner info:', e);
+    }
+  };
 
   const fetchMessages = async () => {
+    if (!user?.id || !senderId) return;
     try {
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .or(`sender.eq.${senderId},receiver.eq.${senderId}`)
+        .or(
+          `and(sender.eq.${user.id},receiver.eq.${senderId}),and(sender.eq.${senderId},receiver.eq.${user.id})`
+        )
         .order('created_at', { ascending: true });
 
-      if (error) {
-        throw new Error(`Could not fetch messages: ${error.message}`);
-      }
-
+      if (error) throw error;
       setMessages(data || []);
-      fetchSenderInfo(data || []);
-    } catch (error) {
-      Alert.alert('Error', `Could not fetch messages1: `);
+      scrollToBottom();
+    } catch (error: any) {
+      console.error('Could not fetch messages:', error.message);
     }
   };
 
-  const fetchSenderInfo = async (messages: Message[]) => {
-    const senderIds = [...new Set(messages.map((msg) => msg.sender))];
-
-    const promises = senderIds.map(async (id) => {
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, username')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.log(`Error fetching sender info for ID ${id}: ${error.message}`);
-        return null;
-      }
-
-      return { id: data.id, username: data.username };
-    });
-
-    const users = await Promise.all(promises);
-    const senderData: { [key: string]: User } = {};
-    users.forEach((user) => {
-      if (user) {
-        senderData[user.id] = user;
-      }
-    });
-
-    setSenderInfo(senderData);
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
   };
 
   const handleSendMessage = async () => {
-    if (message.trim() === '') {
-      Alert.alert('Error', 'Message cannot be empty');
-      return;
-    }
+    if (message.trim() === '' || !user?.id || !senderId) return;
 
-    if (!user) {
-      Alert.alert('Error', 'You must be logged in to send messages');
-      return;
-    }
+    const textToSend = message.trim();
+    setMessage('');
+    setSending(true);
 
     try {
-      const { error } = await supabase
-        .from('messages')
-        .insert([{ sender: user.id, receiver: senderId, message }]);
+      const { error } = await supabase.from('messages').insert([
+        {
+          sender: user.id,
+          receiver: senderId,
+          message: textToSend,
+        },
+      ]);
 
-      if (error) {
-        throw new Error(`Could not send message: ${error.message}`);
-      }
-      setMessage('');
-      fetchMessages(); // Refetch messages to include the newly sent message
-    } catch (error) {
-      Alert.alert('Error', `Could not send message2: `);
+      if (error) throw error;
+      fetchMessages();
+    } catch (error: any) {
+      Alert.alert('Send Error', error.message || 'Could not send message.');
+    } finally {
+      setSending(false);
     }
   };
 
   const formatDate = (dateString: string) => {
     const messageDate = new Date(dateString);
-  
     const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
     };
-  
-    return messageDate.toLocaleString(undefined, options);
+    return messageDate.toLocaleTimeString(undefined, options);
   };
-  
-  
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.messagesWrapper}>
-        <ScrollView contentContainerStyle={styles.messagesContainer}>
-          {messages.map((msg, index) => (
-            <View
-              key={`${msg.id}-${index}`} // unique key is directly assigned to the View element
-              style={[
-                styles.messageContainer,
-                msg.sender === user?.id ? styles.sellerMessageContainer : styles.receiverMessageContainer
-              ]}
-            >
-              {msg.sender !== user?.id && (
-                <View style={styles.senderInfo}>
-                  <View style={styles.circleIcon}>
-                    <Text style={styles.circleText}>{senderInfo[msg.sender]?.username[0] || '?'}</Text>
-                  </View>
-                  <View style={styles.senderDetails}>
-                    <Text style={styles.username}>{senderInfo[msg.sender]?.username || 'Loading...'}</Text>
-                  </View>
-                </View>
-              )}
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={styles.messagesContainer}
+          onContentSizeChange={scrollToBottom}
+        >
+          {messages.map((msg, index) => {
+            const isMine = msg.sender === user?.id;
+            return (
               <View
+                key={`${msg.id || index}`}
                 style={[
-                  styles.messageBubble,
-                  msg.sender === user?.id ? styles.sellerMessageBubble : styles.receiverMessageBubble
+                  styles.messageRow,
+                  isMine ? styles.myMessageRow : styles.partnerMessageRow,
                 ]}
               >
-                <Text>{msg.message}</Text>
-                <Text
+                {!isMine && (
+                  <View style={styles.avatarMini}>
+                    <Text style={styles.avatarText}>
+                      {partnerInfo?.username ? partnerInfo.username.charAt(0).toUpperCase() : '?'}
+                    </Text>
+                  </View>
+                )}
+                <View
                   style={[
-                    styles.timestamp,
-                    msg.sender === user?.id ? styles.sellerTimestamp : styles.receiverTimestamp
+                    styles.messageBubble,
+                    isMine ? styles.myMessageBubble : styles.partnerMessageBubble,
                   ]}
                 >
-                  {formatDate(msg.created_at)}
-                </Text>
+                  <Text style={[styles.messageText, isMine && styles.myMessageText]}>
+                    {msg.message}
+                  </Text>
+                  <Text style={[styles.timestamp, isMine && styles.myTimestamp]}>
+                    {formatDate(msg.created_at)}
+                  </Text>
+                </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </ScrollView>
-      </View>
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.textInput}
-          placeholder="Type a message..."
-          value={message}
-          onChangeText={setMessage}
-        />
-         <TouchableOpacity onPress={handleSendMessage}>
-            <Ionicons name='send' size={30} color={'brown'}/>
+
+        {/* Input bar */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Type a reply to customer..."
+            placeholderTextColor="#888"
+            value={message}
+            onChangeText={setMessage}
+            multiline
+          />
+          <TouchableOpacity
+            style={[styles.sendBtn, (!message.trim() || sending) && { opacity: 0.5 }]}
+            onPress={handleSendMessage}
+            disabled={!message.trim() || sending}
+          >
+            <Ionicons name="send" size={20} color="#FFF" />
           </TouchableOpacity>
-      </View>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -185,88 +225,101 @@ export default function SellerChat() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    flexDirection: 'column',
-  },
-  messagesWrapper: {
-    flex: 1,
+    backgroundColor: '#F8F8F8',
   },
   messagesContainer: {
+    padding: 16,
+    paddingBottom: 20,
     flexGrow: 1,
     justifyContent: 'flex-end',
   },
-  messageContainer: {
-    marginBottom: 10,
-    flexDirection: 'column', // Ensure that the message and sender info are aligned in a column
-  },
-  sellerMessageContainer: {
-    alignSelf: 'flex-end',
-  },
-  receiverMessageContainer: {
-    alignSelf: 'flex-start',
-  },
-  senderInfo: {
+  messageRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
+    alignItems: 'flex-end',
+    marginBottom: 12,
   },
-  circleIcon: {
-    width: 25,
-    height: 25,
-    borderRadius: 12.5,
-    backgroundColor: 'brown',
+  myMessageRow: {
+    justifyContent: 'flex-end',
+  },
+  partnerMessageRow: {
+    justifyContent: 'flex-start',
+  },
+  avatarMini: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#5C3A2E',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 8,
+    marginBottom: 2,
   },
-  circleText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  senderDetails: {
-    flexDirection: 'column',
-  },
-  username: {
-    fontSize: 14,
+  avatarText: {
+    color: '#FFF',
+    fontSize: 12,
     fontWeight: 'bold',
   },
   messageBubble: {
-    maxWidth: '80%',
-    padding: 10,
-    borderRadius: 15,
+    maxWidth: '75%',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+  },
+  myMessageBubble: {
+    backgroundColor: '#5C3A2E',
+    borderBottomRightRadius: 4,
+  },
+  partnerMessageBubble: {
+    backgroundColor: '#FFF',
+    borderBottomLeftRadius: 4,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#ECECEC',
   },
-  sellerMessageBubble: {
-    backgroundColor: 'transparent',
-    color: '#fff',
+  messageText: {
+    fontSize: 14,
+    color: '#222',
+    lineHeight: 20,
   },
-  receiverMessageBubble: {
-    backgroundColor: '#f1f1f1',
+  myMessageText: {
+    color: '#FFF',
+  },
+  timestamp: {
+    fontSize: 10,
+    color: '#999',
+    marginTop: 4,
+    alignSelf: 'flex-end',
+  },
+  myTimestamp: {
+    color: '#D4C0B5',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 12,
     paddingVertical: 10,
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderTopColor: '#ECECEC',
   },
   textInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 10,
-    marginRight: 10,
+    borderColor: '#E0E0E0',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    maxHeight: 100,
+    backgroundColor: '#F9F9F9',
+    fontSize: 14,
+    color: '#333',
   },
-  timestamp: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 5,
-  },
-  sellerTimestamp: {
-    textAlign: 'right',
-  },
-  receiverTimestamp: {
-    textAlign: 'right',
+  sendBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#5C3A2E',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
 });

@@ -1,6 +1,6 @@
 // CartScreen.tsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -11,21 +11,21 @@ import {
   TouchableWithoutFeedback,
   Image,
   Dimensions,
-  Modal
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useAuth } from '@/context/AuthContext';
-import { useCart } from '@/context/CartProvider';
-import { getCartItems, removeFromCart, updateQuantity } from '@/data/data';
-import { Colors } from '@/constants/Colors';
-import { CartItemProps, Variant } from '@/types/types';
-import CartItem from '@/components/CartScreen/CartList';
-import UpdateModal from '@/components/CartScreen/UpdateCart';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import Loading from '@/components/Loading';
-import LottieView from 'lottie-react-native';
+  Modal,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartProvider";
+import { getCartItems, removeFromCart, updateQuantity } from "@/data/data";
+import { Colors } from "@/constants/Colors";
+import { CartItemProps, Variant } from "@/types/types";
+import CartItem from "@/components/CartScreen/CartList";
+import UpdateModal from "@/components/CartScreen/UpdateCart";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import Loading from "@/components/Loading";
+import LottieView from "lottie-react-native";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const CartScreen: React.FC = () => {
   const router = useRouter();
@@ -38,7 +38,7 @@ const CartScreen: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [totalAmount, setTotalAmount] = useState(0.00);
+  const [totalAmount, setTotalAmount] = useState(0.0);
   const [variant, setVariant] = useState<CartItemProps>();
   const [variants, setVariants] = useState<Variant[] | null>();
 
@@ -48,9 +48,11 @@ const CartScreen: React.FC = () => {
   const [deleteAllModalVisible, setDeleteAllModalVisible] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
-  if (!user) {
-    router.replace('../LoginScreen');
-  }
+  useEffect(() => {
+    if (!user) {
+      router.replace("../LoginScreen");
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchCartItems = async () => {
@@ -83,22 +85,20 @@ const CartScreen: React.FC = () => {
   const confirmDeleteItem = async () => {
     if (itemToDelete) {
       await removeFromCart(itemToDelete);
-      setCartItems((prevItems) => prevItems.filter(item => item.cart_id !== itemToDelete));
+      setCartItems((prevItems) => prevItems.filter((item) => item.cart_id !== itemToDelete));
       setItemToDelete(null);
       setDeleteItemModalVisible(false);
     }
   };
 
   const toggleSelectItem = (id: string, price: number, discount: number, quantity: number) => {
-    setSelectedItems(prevSelected =>
-      prevSelected.includes(id) ?
-        prevSelected.filter(itemId => itemId !== id) :
-        [...prevSelected, id]
+    setSelectedItems((prevSelected) =>
+      prevSelected.includes(id) ? prevSelected.filter((itemId) => itemId !== id) : [...prevSelected, id]
     );
 
-    const itemTotal = (price * (1 - discount / 100)) * quantity;
+    const itemTotal = price * (1 - discount / 100) * quantity;
 
-    setTotalAmount(prevTotal => {
+    setTotalAmount((prevTotal) => {
       const newTotal = selectedItems.includes(id) ? prevTotal - itemTotal : prevTotal + itemTotal;
       return Math.max(0, parseFloat(newTotal.toFixed(2)));
     });
@@ -110,9 +110,12 @@ const CartScreen: React.FC = () => {
       setTotalAmount(0);
       setSelectAll(false);
     } else {
-      const allItemIds = cartItems.map(item => item.cart_id);
+      const allItemIds = cartItems.map((item) => item.cart_id);
       const total = cartItems.reduce((acc, item) => {
-        const itemTotal = (item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100)) * item.quantity;
+        const itemTotal =
+          item.product_variant.products.product_price *
+          (1 - item.product_variant.products.product_discount / 100) *
+          item.quantity;
         return acc + itemTotal;
       }, 0);
 
@@ -127,8 +130,8 @@ const CartScreen: React.FC = () => {
   };
 
   const confirmDeleteAll = async () => {
-    await Promise.all(selectedItems.map(id => removeFromCart(id)));
-    setCartItems(prevItems => prevItems.filter(item => !selectedItems.includes(item.cart_id)));
+    await Promise.all(selectedItems.map((id) => removeFromCart(id)));
+    setCartItems((prevItems) => prevItems.filter((item) => !selectedItems.includes(item.cart_id)));
     setSelectedItems([]);
     setTotalAmount(0);
     setSelectAll(false);
@@ -146,55 +149,83 @@ const CartScreen: React.FC = () => {
   };
 
   const handleCheckout = () => {
-    const itemstoCheckout = cartItems.filter(item => selectedItems.includes(item.cart_id))
+    const itemstoCheckout = cartItems.filter((item) => selectedItems.includes(item.cart_id));
     setSelectedPurchase(itemstoCheckout);
     if (selectedPurchase.length === 0) {
-      Alert.alert('No Items Selected', 'Please select at least one item to proceed to checkout.');
+      Alert.alert("No Items Selected", "Please select at least one item to proceed to checkout.");
       return;
     }
-    router.push('../CheckOutScreen')
+    router.push("../CheckOutScreen");
   };
 
   const incrementQuantity = (item: CartItemProps) => {
-    updateCartItemQuantity(item.cart_id, (item.quantity + 1));
-    { selectedItems.includes(item.variant_id) ? setTotalAmount(amount => amount + (item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100))) : null }
+    updateCartItemQuantity(item.cart_id, item.quantity + 1);
+    {
+      selectedItems.includes(item.variant_id)
+        ? setTotalAmount(
+            (amount) =>
+              amount +
+              item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100)
+          )
+        : null;
+    }
   };
 
   const decrementQuantity = (item: CartItemProps) => {
-    updateCartItemQuantity(item.cart_id, (item.quantity - 1));
-    { selectedItems.includes(item.cart_id) ? setTotalAmount(amount => amount - (item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100))) : null }
+    updateCartItemQuantity(item.cart_id, item.quantity - 1);
+    {
+      selectedItems.includes(item.cart_id)
+        ? setTotalAmount(
+            (amount) =>
+              amount -
+              item.product_variant.products.product_price * (1 - item.product_variant.products.product_discount / 100)
+          )
+        : null;
+    }
   };
 
   const updateCartItemQuantity = (itemId: string, newQuantity: number) => {
     setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.cart_id === itemId ? { ...item, quantity: newQuantity } : item
-      )
+      prevItems.map((item) => (item.cart_id === itemId ? { ...item, quantity: newQuantity } : item))
     );
     const quantity = async () => await updateQuantity(itemId, newQuantity);
     quantity();
   };
 
-
-
   if (loading) {
     return <Loading />;
-  };
+  }
 
   return (
     <View style={styles.container}>
       {cartItems.length === 0 ? (
         <View>
-          <Image source={require('@/assets/images/emptyCart.png')} style={{ width: width * 0.6, height: width * 0.6, resizeMode: 'contain', marginHorizontal: 'auto', marginTop: 60 }} />
+          <Image
+            source={require("@/assets/images/emptyCart.png")}
+            style={{
+              width: width * 0.6,
+              height: width * 0.6,
+              resizeMode: "contain",
+              marginHorizontal: "auto",
+              marginTop: 60,
+            }}
+          />
           <Text style={styles.emptyCartText}>Your cart is empty!</Text>
         </View>
       ) : (
         <>
-          <View style={{ paddingHorizontal: 18, backgroundColor: '#fff', paddingBottom: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row' }}>
+          <View
+            style={{
+              paddingHorizontal: 18,
+              backgroundColor: "#fff",
+              paddingBottom: 8,
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}>
+            <View style={{ flexDirection: "row" }}>
               <TouchableWithoutFeedback onPress={toggleSelectAllItem}>
                 <MaterialIcons
-                  name={selectAll ? 'check-box' : 'check-box-outline-blank'}
+                  name={selectAll ? "check-box" : "check-box-outline-blank"}
                   size={20}
                   color={selectAll ? Colors.button : Colors.icon}
                   style={styles.checkbox}
@@ -205,9 +236,13 @@ const CartScreen: React.FC = () => {
             <View>
               {selectedItems.length > 0 && (
                 <TouchableOpacity onPress={deleteAll}>
-                  <View style={{ flexDirection: 'row' }}>
-                    <Text style={{ fontSize: 14, textAlignVertical: 'center', color: 'red' }}>Delete All</Text>
-                    <Ionicons name='trash-outline' size={20} color='red' />
+                  <View style={{ flexDirection: "row" }}>
+                    <Text style={{ fontSize: 14, textAlignVertical: "center", color: "red" }}>Delete All</Text>
+                    <Ionicons
+                      name="trash-outline"
+                      size={20}
+                      color="red"
+                    />
                   </View>
                 </TouchableOpacity>
               )}
@@ -230,13 +265,14 @@ const CartScreen: React.FC = () => {
             contentContainerStyle={styles.listContainer}
           />
 
-
           <View style={styles.totalContainer}>
             <View>
               <Text style={styles.totalAmountText}>Total Amount</Text>
               <Text style={styles.totalText}>₱{totalAmount.toFixed(2)}</Text>
             </View>
-            <TouchableOpacity onPress={handleCheckout} style={styles.checkoutButton}>
+            <TouchableOpacity
+              onPress={handleCheckout}
+              style={styles.checkoutButton}>
               <Text style={styles.checkoutText}>Checkout</Text>
             </TouchableOpacity>
           </View>
@@ -257,18 +293,25 @@ const CartScreen: React.FC = () => {
         transparent={true}
         visible={deleteItemModalVisible}
         animationType="fade"
-        onRequestClose={() => setDeleteItemModalVisible(false)}
-      >
+        onRequestClose={() => setDeleteItemModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Ionicons name="warning-outline" size={40} color="orange" />
+            <Ionicons
+              name="warning-outline"
+              size={40}
+              color="orange"
+            />
             <Text style={styles.modalTitle}>Remove Item</Text>
             <Text style={styles.modalDescription}>Are you sure you want to remove this item from your cart?</Text>
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setDeleteItemModalVisible(false)}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setDeleteItemModalVisible(false)}>
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.confirmButton} onPress={confirmDeleteItem}>
+              <TouchableOpacity
+                style={styles.confirmButton}
+                onPress={confirmDeleteItem}>
                 <Text style={styles.buttonText}>Remove</Text>
               </TouchableOpacity>
             </View>
@@ -281,18 +324,27 @@ const CartScreen: React.FC = () => {
         transparent={true}
         visible={deleteAllModalVisible}
         animationType="fade"
-        onRequestClose={() => setDeleteAllModalVisible(false)}
-      >
+        onRequestClose={() => setDeleteAllModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Ionicons name="trash-outline" size={40} color="red" />
+            <Ionicons
+              name="trash-outline"
+              size={40}
+              color="red"
+            />
             <Text style={styles.modalTitle}>Delete Selected Items</Text>
-            <Text style={styles.modalDescription}>Are you sure you want to delete all selected items from your cart?</Text>
+            <Text style={styles.modalDescription}>
+              Are you sure you want to delete all selected items from your cart?
+            </Text>
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setDeleteAllModalVisible(false)}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setDeleteAllModalVisible(false)}>
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.confirmButton} onPress={confirmDeleteAll}>
+              <TouchableOpacity
+                style={styles.confirmButton}
+                onPress={confirmDeleteAll}>
                 <Text style={styles.buttonText}>Delete All</Text>
               </TouchableOpacity>
             </View>
@@ -309,7 +361,7 @@ const styles = StyleSheet.create({
   },
   emptyCartText: {
     fontSize: 18,
-    textAlign: 'center',
+    textAlign: "center",
     color: Colors.text,
     marginTop: 20,
   },
@@ -319,82 +371,82 @@ const styles = StyleSheet.create({
   },
   totalContainer: {
     padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
   },
   totalAmountText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.title,
   },
   totalText: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.title,
   },
   checkoutButton: {
     backgroundColor: Colors.button,
     borderRadius: 30,
-    alignItems: 'center',
-    width: '50%',
+    alignItems: "center",
+    width: "50%",
   },
   checkoutText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
     fontSize: 16,
-    margin: 'auto'
+    margin: "auto",
   },
   checkbox: {
     marginRight: 8,
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalContent: {
-    width: '80%',
+    width: "80%",
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginVertical: 10,
   },
   modalDescription: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     marginBottom: 20,
   },
   modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   cancelButton: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     padding: 10,
     marginRight: 5,
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
     borderRadius: 5,
   },
   confirmButton: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     padding: 10,
     marginLeft: 5,
-    backgroundColor: 'red',
+    backgroundColor: "red",
     borderRadius: 5,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
 

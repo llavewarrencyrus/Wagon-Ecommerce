@@ -1,239 +1,614 @@
-import * as React from 'react';
-import { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, Alert, Button, RefreshControl } from 'react-native';
-import { supabase } from '@/lib/supabase';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Image,
+  RefreshControl,
+  TextInput,
+  ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, router } from "expo-router";
-import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { useAuth } from '@/context/AuthContext';
+import { getSellerProducts, deleteProduct } from '@/data/data';
+import { Product } from '@/types/types';
+import { Colors } from '@/constants/Colors';
 
 export default function SellerProducts() {
-    const navigation = useNavigation();
-    const [products, setProducts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [isSeller, setIsSeller] = useState(false);
-    const [refreshing, setRefreshing] = useState(false);
-    const [collapsedProducts, setCollapsedProducts] = useState<{ [key: number]: boolean }>({});
+  const router = useRouter();
+  const { user } = useAuth();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
-    useEffect(() => {
-        checkUser();
-    }, []);
+  useEffect(() => {
+    fetchProducts();
+  }, [user]);
 
-    const checkUser = async () => {
-        try {
-            const { data: userData, error } = await supabase.auth.getUser();
-            if (error || !userData?.user) {
-                Alert.alert("Error", "You must be logged in to access this page.");
-                navigation.goBack(); // Redirect if not logged in
-                return;
+  const fetchProducts = async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      const data = await getSellerProducts(user.id);
+      setProducts(data || []);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchProducts();
+    setRefreshing(false);
+  };
+
+  const handleEditProduct = (productId: string) => {
+    router.push({
+      pathname: '/UpdateProduct' as any,
+      params: { productId },
+    });
+  };
+
+  const handleDeleteProduct = (productId: string, productName: string) => {
+    Alert.alert(
+      'Delete Product',
+      `Are you sure you want to permanently delete "${productName}" and its variants?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteProduct(productId);
+              Alert.alert('Deleted', 'Product has been removed.');
+              fetchProducts();
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'Failed to delete product.');
             }
-
-            const userEmail = userData.user.email;
-
-            if (userEmail === 'seller@wagon.com') {
-                setIsSeller(true); // Allow access
-                fetchProducts(); // Fetch products only if seller
-            } else {
-                Alert.alert("Access Denied", "You do not have permission to access this page.");
-                navigation.goBack(); // Redirect if not the seller
-            }
-        } catch (err) {
-            console.error("Error fetching user data:", err);
-            Alert.alert("Error", "There was an issue fetching your user data.");
-        }
-    };
-
-    const fetchProducts = async () => {
-        setLoading(true);
-        try {
-            const { data, error } = await supabase.from('products').select('*');
-            if (error) {
-                console.error('Error fetching products:', error.message);
-                setLoading(false);
-                return;
-            }
-            setProducts(data || []);
-            setLoading(false);
-        } catch (err) {
-            console.error("Error fetching products:", err);
-            setLoading(false);
-        }
-    };
-
-    const handleUpdateProduct = (productId: number) => {
-        router.push(`../UpdateProduct/${productId}`);
-    };
-
-    const handleRemoveProduct = (productId: number) => {
-        router.push(`../RemoveProduct/${productId}`);
-    };
-
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await fetchProducts();
-        setRefreshing(false);
-    };
-
-    // Toggle the expanded state for the product
-    const toggleProductDetails = (productId: number) => {
-        setCollapsedProducts((prevState) => ({
-            ...prevState,
-            [productId]: !prevState[productId], // Toggle the collapse state for the clicked product
-        }));
-    };
-
-    const renderItem = ({ item }: { item: any }) => (
-        <View style={styles.productContainer}>
-            <TouchableOpacity onPress={() => toggleProductDetails(item.id)}>
-                <Text style={styles.productName}>{item.product_name}</Text>
-            </TouchableOpacity>
-
-            {/* Conditionally render product details based on collapse state */}
-            {collapsedProducts[item.id] ? (
-                <View style={styles.productDetailsContainer}>
-                    <Text style={styles.productDetails}>Price: ${item.product_price}</Text>
-                    <Text style={styles.productDetails}>Quantity: {item.product_quantity}</Text>
-                    <Text style={styles.productDetails}>Color: {item.product_color}</Text>
-                    <Text style={styles.productDetails}>Size: {item.product_size}</Text>
-                    <Text style={styles.productDetails}>Material: {item.product_material}</Text>
-                    <Text style={styles.productDetails}>Dimensions: {item.product_length} x {item.product_width}</Text>
-                    <Text style={styles.productDescription}>Description: {item.product_description}</Text>
-                    <View style={styles.buttonContainer}>
-                        <Button
-                            title="Update Product"
-                            onPress={() => handleUpdateProduct(item.id)}
-                            color="#9C6F56"
-                        />
-                        <Button
-                            title="Remove Product"
-                            onPress={() => handleRemoveProduct(item.id)}
-                            color="#9C3F2D" 
-                        />
-                    </View>
-                </View>
-            ) : null}
-        </View>
+          },
+        },
+      ]
     );
+  };
 
-    if (!isSeller) {
-        return <View><Text>Loading...</Text></View>;
+  // Extract unique categories from seller's products
+  const availableCategories = [
+    'All',
+    ...Array.from(
+      new Set(
+        products.flatMap((p) => (Array.isArray(p.product_category) ? p.product_category : []))
+      )
+    ),
+  ];
+
+  // Filter products by search and category
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch =
+      !searchQuery.trim() ||
+      p.product_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.product_description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesCategory =
+      selectedCategory === 'All' ||
+      (Array.isArray(p.product_category) && p.product_category.includes(selectedCategory));
+
+    return matchesSearch && matchesCategory;
+  });
+
+  const renderProductItem = ({ item }: { item: any }) => {
+    // Calculate total stock across variants
+    let totalStock = 0;
+    if (item.product_variant && Array.isArray(item.product_variant)) {
+      item.product_variant.forEach((v: any) => {
+        totalStock += v.product_quantity || 0;
+      });
     }
 
+    const imageUri =
+      Array.isArray(item.product_image) && item.product_image.length > 0
+        ? item.product_image[0]
+        : null;
+
+    const isLowStock = totalStock < 5;
+    const isOutOfStock = totalStock === 0;
+
     return (
-        <SafeAreaView style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <Text style={styles.headerText}>Products</Text>
+      <View style={styles.productCard}>
+        <View style={styles.cardTop}>
+          {/* Thumbnail */}
+          {imageUri ? (
+            <Image source={{ uri: imageUri }} style={styles.productThumb} resizeMode="cover" />
+          ) : (
+            <View style={[styles.productThumb, styles.productThumbPlaceholder]}>
+              <Ionicons name="image-outline" size={28} color="#AAA" />
+            </View>
+          )}
+
+          {/* Info */}
+          <View style={styles.cardInfo}>
+            <Text style={styles.productName} numberOfLines={2}>
+              {item.product_name}
+            </Text>
+
+            {/* Category Tags */}
+            {Array.isArray(item.product_category) && item.product_category.length > 0 ? (
+              <View style={styles.catWrap}>
+                {item.product_category.slice(0, 2).map((c: string, idx: number) => (
+                  <Text key={idx} style={styles.catChip}>
+                    {c}
+                  </Text>
+                ))}
+              </View>
+            ) : null}
+
+            {/* Price & Rating */}
+            <View style={styles.priceRow}>
+              <Text style={styles.priceText}>${Number(item.product_price).toFixed(2)}</Text>
+              {item.product_discount > 0 && (
+                <View style={styles.discountBadge}>
+                  <Text style={styles.discountBadgeText}>-{item.product_discount}%</Text>
+                </View>
+              )}
             </View>
 
-            {loading ? (
-                <ActivityIndicator size="large" color="#8E6B52" />
-            ) : (
-                <FlatList
-                    data={products}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item.id?.toString() || ''} // Ensure each item has a unique key
-                    ListEmptyComponent={<Text>No products found.</Text>}
-                    style={styles.list}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={['#8E6B52']} // Color for the pull-to-refresh spinner
-                        />
-                    }
-                />
-            )}
+            {/* Stock Level Tag */}
+            <View style={styles.stockRow}>
+              <View
+                style={[
+                  styles.stockBadge,
+                  isOutOfStock
+                    ? styles.stockOut
+                    : isLowStock
+                    ? styles.stockLow
+                    : styles.stockGood,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.stockBadgeText,
+                    isOutOfStock
+                      ? styles.stockOutText
+                      : isLowStock
+                      ? styles.stockLowText
+                      : styles.stockGoodText,
+                  ]}
+                >
+                  {isOutOfStock
+                    ? 'Out of Stock'
+                    : isLowStock
+                    ? `Low Stock (${totalStock})`
+                    : `In Stock: ${totalStock}`}
+                </Text>
+              </View>
+              <Text style={styles.variantCount}>
+                {item.product_variant?.length || 0} variant(s)
+              </Text>
+            </View>
+          </View>
+        </View>
 
-            <TouchableOpacity onPress={() => router.push('/AddProduct')} style={styles.floatingContainer}>
-                <Ionicons name='add-circle' size={55} color={styles.icon.color} style={styles.icon} />
-            </TouchableOpacity>
-        </SafeAreaView>
+        {/* Action Buttons Footer */}
+        <View style={styles.cardActions}>
+          <TouchableOpacity
+            style={styles.actionBtnSecondary}
+            onPress={() => handleDeleteProduct(item.product_id, item.product_name)}
+          >
+            <Ionicons name="trash-outline" size={16} color="#D32F2F" />
+            <Text style={styles.actionBtnSecondaryText}>Delete</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionBtnPrimary}
+            onPress={() => handleEditProduct(item.product_id)}
+          >
+            <Ionicons name="create-outline" size={16} color="#FFF" />
+            <Text style={styles.actionBtnPrimaryText}>Edit Product</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.headerTitle}>My Products</Text>
+          <Text style={styles.headerSub}>
+            {products.length} product{products.length === 1 ? '' : 's'} in your store catalog
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={styles.headerAddBtn}
+          onPress={() => router.push('/AddProduct')}
+        >
+          <Ionicons name="add" size={20} color="#FFF" />
+          <Text style={styles.headerAddBtnText}>Add Product</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Search & Category Filter */}
+      <View style={styles.filterSection}>
+        <View style={styles.searchBar}>
+          <Ionicons name="search-outline" size={18} color="#888" style={{ marginRight: 8 }} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search products by name..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            clearButtonMode="while-editing"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={18} color="#888" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {availableCategories.length > 1 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryScroll}
+          >
+            {availableCategories.map((cat) => (
+              <TouchableOpacity
+                key={cat}
+                style={[
+                  styles.filterChip,
+                  selectedCategory === cat && styles.filterChipActive,
+                ]}
+                onPress={() => setSelectedCategory(cat)}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    selectedCategory === cat && styles.filterChipTextActive,
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+      </View>
+
+      {/* Product List */}
+      {loading ? (
+        <View style={styles.loadingBox}>
+          <ActivityIndicator size="large" color="#5C3A2E" />
+          <Text style={styles.loadingText}>Loading catalog...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredProducts}
+          keyExtractor={(item) => item.product_id}
+          renderItem={renderProductItem}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#5C3A2E']}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyBox}>
+              <MaterialCommunityIcons name="tag-outline" size={60} color="#C4B0A3" />
+              <Text style={styles.emptyTitle}>No products found</Text>
+              <Text style={styles.emptySubtitle}>
+                {searchQuery || selectedCategory !== 'All'
+                  ? 'Try changing your search keywords or filter category.'
+                  : 'Start listing items for sale by tapping "Add Product".'}
+              </Text>
+              <TouchableOpacity
+                style={styles.emptyAddBtn}
+                onPress={() => router.push('/AddProduct')}
+              >
+                <Ionicons name="add-circle-outline" size={20} color="#FFF" style={{ marginRight: 6 }} />
+                <Text style={styles.emptyAddBtnText}>Add Your First Product</Text>
+              </TouchableOpacity>
+            </View>
+          }
+        />
+      )}
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingHorizontal: 0, // Adjust for consistency
-        backgroundColor: '#f8f8f8',
-    },
-    header: {
-        height: 60,
-        backgroundColor: '#FFF', // White background like in the image
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#E5E5E5', // Subtle gray for bottom border
-    },
-    headerText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#000', // Black text for visibility
-    },
-    list: {
-        marginBottom: 0,
-    },
-    floatingContainer: {
-        position: 'absolute',
-        right: 20,
-        bottom: 20,
-    },
-    icon: {
-        opacity: 0.8,
-        color: '#5C3A2E', // Primary color for the icon
-    },
-    productContainer: {
-        padding: 15,
-        backgroundColor: '#fff',
-        marginBottom: 10,
-        borderRadius: 10,
-        shadowColor: '#3E3228', // Shadow color
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
-    },
-    productName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 5,
-        color: '#3E2B23', // Title color
-    },
-    productDetailsContainer: {
-        marginTop: 10,
-    },
-    productDetails: {
-        fontSize: 14,
-        marginBottom: 4,
-        fontWeight: 'bold',
-        color: '#4A3027', // Text color for product details
-    },
-    productDescription: {
-        fontSize: 14,
-        marginBottom: 4,
-        fontWeight: 'bold',
-        color: '#4A3027', // Text color for description
-    },
-    buttonContainer: {
-        marginTop: 10,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    button: {
-        flex: 1,
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    updateButton: {
-        backgroundColor: '#5C3A2E', // Primary color for the update button
-    },
-    removeButton: {
-        backgroundColor: '#9C3F2D', // Error color for the remove button
-    },
-    buttonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F8F8',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 12,
+    backgroundColor: '#FFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ECECEC',
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#2E1E17',
+  },
+  headerSub: {
+    fontSize: 12,
+    color: '#777',
+    marginTop: 2,
+  },
+  headerAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#5C3A2E',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+  },
+  headerAddBtnText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  filterSection: {
+    backgroundColor: '#FFF',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ECECEC',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F2F2F2',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#333',
+  },
+  categoryScroll: {
+    paddingTop: 10,
+  },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 16,
+    backgroundColor: '#F0F0F0',
+    marginRight: 8,
+  },
+  filterChipActive: {
+    backgroundColor: '#5C3A2E',
+  },
+  filterChipText: {
+    fontSize: 12,
+    color: '#555',
+    fontWeight: '500',
+  },
+  filterChipTextActive: {
+    color: '#FFF',
+    fontWeight: '600',
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 50,
+  },
+  loadingBox: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#666',
+    fontSize: 14,
+  },
+  productCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  cardTop: {
+    flexDirection: 'row',
+  },
+  productThumb: {
+    width: 85,
+    height: 100,
+    borderRadius: 8,
+    backgroundColor: '#EEE',
+  },
+  productThumbPlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardInfo: {
+    flex: 1,
+    marginLeft: 14,
+    justifyContent: 'space-between',
+  },
+  productName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#222',
+  },
+  catWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 4,
+  },
+  catChip: {
+    fontSize: 10,
+    color: '#666',
+    backgroundColor: '#EBEBEB',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  priceText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#5C3A2E',
+  },
+  discountBadge: {
+    backgroundColor: '#FFEBEE',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  discountBadgeText: {
+    fontSize: 11,
+    color: '#D32F2F',
+    fontWeight: 'bold',
+  },
+  stockRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  stockBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  stockBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  stockGood: {
+    backgroundColor: '#E8F5E9',
+  },
+  stockGoodText: {
+    fontSize: 11,
+    color: '#2E7D32',
+    fontWeight: '600',
+  },
+  stockLow: {
+    backgroundColor: '#FFF3E0',
+  },
+  stockLowText: {
+    fontSize: 11,
+    color: '#E65100',
+    fontWeight: '700',
+  },
+  stockOut: {
+    backgroundColor: '#FFEBEE',
+  },
+  stockOutText: {
+    fontSize: 11,
+    color: '#C62828',
+    fontWeight: '700',
+  },
+  variantCount: {
+    fontSize: 11,
+    color: '#888',
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  actionBtnSecondary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#FFCDD2',
+    marginRight: 8,
+  },
+  actionBtnSecondaryText: {
+    fontSize: 12,
+    color: '#D32F2F',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  actionBtnPrimary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+    backgroundColor: '#5C3A2E',
+  },
+  actionBtnPrimaryText: {
+    fontSize: 12,
+    color: '#FFF',
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  emptyBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 80,
+    paddingHorizontal: 30,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#444',
+    marginTop: 16,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 18,
+  },
+  emptyAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#5C3A2E',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  emptyAddBtnText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
 });

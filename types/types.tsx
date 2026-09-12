@@ -22,6 +22,7 @@ export interface Variant {
 
 export interface Product {
   product_id: string;
+  seller_id?: string;
   product_name: string;
   product_description: string;
   product_image: Array<string>;
@@ -30,10 +31,67 @@ export interface Product {
   product_rating: number;
   sales_count: number;
   product_material: Array<string>;
+  product_category?: Array<string>;
   product_variant: Variant[];
 }
 
+export interface StoreProfile {
+  id: string;
+  username: string;
+  email: string;
+  profile_picture?: string;
+  is_seller: boolean;
+  store_name?: string;
+  store_description?: string;
+  store_logo?: string;
+  store_banner?: string;
+  pickup_address?: string;
+}
 
+export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+
+export interface SellerOrder {
+  id: string;
+  user_id: string;
+  seller_id?: string;
+  variant_id: string;
+  address_id?: string;
+  status: OrderStatus;
+  tracking_number?: string;
+  courier?: string;
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+  addresses?: AddressProps;
+  users?: {
+    id: string;
+    username: string;
+    email: string;
+    profile_picture?: string;
+  };
+  product_variant?: {
+    variant_id: string;
+    product_id: string;
+    product_quantity: number;
+    products: {
+      product_id: string;
+      product_name: string;
+      product_price: number;
+      product_discount: number;
+      product_image: string[];
+    };
+    product_color?: {
+      id: string;
+      color: string;
+      image?: string;
+    };
+    product_size?: {
+      id: string;
+      size: string;
+      dimension?: string;
+    };
+  };
+}
 
 export interface ProductCardProps {
   imageUri: Array<string>;
@@ -108,6 +166,7 @@ export interface CartItemProps {
 export interface AddressProps {
   id?: string;
   user_id?: string;
+  title?: string;
   name:string;
   phone:string;
   house_number_street: string;
@@ -121,14 +180,19 @@ export interface AddressProps {
 //Types
 export type RootStackParamList = {
   Home: undefined;
-  Product: { id: string; keyword: string; category: string };
+  Product: { id: string; keyword?: string; category?: string };
   ProductList: { products: Array<Product> };
   SellerMessages: undefined;
-  SellerChat: { senderId: string };
+  SellerChat: { senderId: string; initialMessage?: string; productId?: string };
+  SellerOrders: undefined;
+  SellerProducts: undefined;
+  AddProduct: undefined;
+  UpdateProduct: { productId: string };
+  EditStoreScreen: undefined;
   Search: { value?: string };
   Refresh: { refresh?: boolean };
   Address: { id?: string };
-  CheckOut: {item: CartItemProps[]};
+  CheckOut: { item: CartItemProps[] };
 };
 
 export type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -142,5 +206,7 @@ export type ProductScreenRouteProp = RouteProp<RootStackParamList, 'Product'>;
 export type AddressScreenRouteProp = RouteProp<RootStackParamList, 'Address'>;
 
 export type CheckOutScreenRouteProp = RouteProp<RootStackParamList, 'CheckOut'>;
+
+export type UpdateProductRouteProp = RouteProp<RootStackParamList, 'UpdateProduct'>;
 
 export type SellerMessagesNavigationProp = StackNavigationProp<RootStackParamList, 'SellerMessages'>;

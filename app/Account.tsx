@@ -1,15 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { useNavigation, useRouter } from "expo-router";
-import { ActivityIndicator, InteractionManager, StyleSheet, Image, Text, View, Alert, TouchableOpacity, Modal, RefreshControl, ScrollView } from 'react-native';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/context/AuthContext';
-import { Colors } from '@/constants/Colors';
-import { useIsFocused } from '@react-navigation/native';
-import { Entypo, Octicons, FontAwesome5, MaterialIcons, Ionicons, SimpleLineIcons } from '@expo/vector-icons';
-import Loading from '@/components/Loading';
+import {
+  ActivityIndicator,
+  InteractionManager,
+  StyleSheet,
+  Image,
+  Text,
+  View,
+  Alert,
+  TouchableOpacity,
+  Modal,
+  RefreshControl,
+  ScrollView,
+} from "react-native";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
+import { Colors } from "@/constants/Colors";
+import { useIsFocused } from "@react-navigation/native";
+import { Entypo, Octicons, FontAwesome5, MaterialIcons, Ionicons, SimpleLineIcons } from "@expo/vector-icons";
+import Loading from "@/components/Loading";
 
-import NetworkIssue from '@/components/NetworkIssue';
-import { useNetwork } from '@/components/NetworkContext';
+import NetworkIssue from "@/components/NetworkIssue";
+import { useNetwork } from "@/components/NetworkContext";
 
 export default function Account() {
   const { isConnected, refreshNetworkStatus } = useNetwork();
@@ -19,14 +31,13 @@ export default function Account() {
   }
   const navigation = useNavigation();
   const router = useRouter();
-  const { isAuthenticated, logout } = useAuth();
-  const [isSeller, setIsSeller] = useState(false);
+  const { isAuthenticated, isSeller, logout, toggleMode, registerAsSeller } = useAuth();
   const [loading, setLoading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [nickname, setNickname] = useState('');
-  const [email, setEmail] = useState('');
-  const [profilePic, setProfilePic] = useState('');
+  const [nickname, setNickname] = useState("");
+  const [email, setEmail] = useState("");
+  const [profilePic, setProfilePic] = useState("");
   const [refreshing, setRefreshing] = useState(false); // State for refreshing
   const isFocused = useIsFocused();
 
@@ -36,13 +47,13 @@ export default function Account() {
     const userId = userData?.user?.id;
 
     const { data, error } = await supabase
-      .from('users')
+      .from("users")
       .select(`username,email,profile_picture`)
-      .eq('id', userId)
+      .eq("id", userId)
       .single();
 
     if (error) {
-      console.error('Error fetching user data:', error);
+      console.error("Error fetching user data:", error);
     } else {
       setNickname(data?.username);
       setEmail(data?.email);
@@ -59,12 +70,16 @@ export default function Account() {
   };
 
   useEffect(() => {
-    fetchUserData();
+    checkUser();
   }, []);
 
   useEffect(() => {
-    checkUser();
-  }, []);
+    if (!isAuthenticated) {
+      router.replace("../LoginScreen");
+    } else {
+      fetchUserData();
+    }
+  }, [isAuthenticated]);
 
   const checkUser = async () => {
     const { data: userData, error } = await supabase.auth.getUser();
@@ -79,16 +94,12 @@ export default function Account() {
     try {
       logout();
     } catch (error) {
-      console.error('Logout Error:', error);
-      Alert.alert('Logout Error', 'There was a problem logging out.');
+      console.error("Logout Error:", error);
+      Alert.alert("Logout Error", "There was a problem logging out.");
     } finally {
       setLoggingOut(false);
     }
   };
-
-  if (!isAuthenticated) {
-    router.replace('../LoginScreen');
-  }
 
   return (
     <>
@@ -98,9 +109,11 @@ export default function Account() {
         <ScrollView
           style={styles.container}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
+          }>
           <View style={styles.profileSection}>
             {profilePic ? (
               <Image
@@ -110,7 +123,7 @@ export default function Account() {
             ) : (
               <Image
                 style={styles.profileImage}
-                source={require('@/assets/images/user.png')}
+                source={require("@/assets/images/user.png")}
               />
             )}
 
@@ -118,63 +131,166 @@ export default function Account() {
             <Text style={styles.profileEmail}>{email}</Text>
           </View>
           <View style={styles.optionsContainer}>
-            <TouchableOpacity onPress={() => router.navigate('../UnderConstruction')} style={styles.optionItem}>
+            {/* Seller Center & Mode Switch */}
+            <TouchableOpacity
+              onPress={async () => {
+                if (isSeller) {
+                  await toggleMode();
+                  router.replace("/(tabs)");
+                } else {
+                  Alert.alert(
+                    "Become a Seller",
+                    "Would you like to activate your seller account and start listing products on Wagon?",
+                    [
+                      { text: "Later", style: "cancel" },
+                      {
+                        text: "Activate Seller Account",
+                        onPress: async () => {
+                          await registerAsSeller({ store_name: `${nickname || "My"} Store` });
+                          router.replace("/(tabs)");
+                        },
+                      },
+                    ]
+                  );
+                }
+              }}
+              style={styles.sellerBannerItem}>
+              <View style={styles.sellerBannerLeft}>
+                <View style={styles.sellerBannerIcon}>
+                  <Ionicons
+                    name="storefront"
+                    size={20}
+                    color="#FFF"
+                  />
+                </View>
+                <View style={{ marginLeft: 12 }}>
+                  <Text style={styles.sellerBannerTitle}>{isSeller ? "Switch to Seller Mode" : "Become a Seller"}</Text>
+                  <Text style={styles.sellerBannerSub}>
+                    {isSeller ? "Manage orders, inventory & live sales" : "Open your store and start selling"}
+                  </Text>
+                </View>
+              </View>
+              <Entypo
+                name="chevron-right"
+                size={20}
+                color="#5C3A2E"
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.navigate("../UnderConstruction")}
+              style={styles.optionItem}>
               <View style={styles.option}>
                 <View style={styles.optionApart}>
-                  <SimpleLineIcons name="bag" size={24} color="#333" />
+                  <SimpleLineIcons
+                    name="bag"
+                    size={24}
+                    color="#333"
+                  />
                   <Text style={styles.optionText}>My Orders</Text>
                 </View>
-                <Entypo name="chevron-right" size={24} color="#333" />
+                <Entypo
+                  name="chevron-right"
+                  size={24}
+                  color="#333"
+                />
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.navigate('../EditProfileScreen')} style={styles.optionItem}>
+            <TouchableOpacity
+              onPress={() => router.navigate("../EditProfileScreen")}
+              style={styles.optionItem}>
               <View style={styles.option}>
                 <View style={styles.optionApart}>
-                  <Ionicons name="person-outline" size={24} color="#333" />
+                  <Ionicons
+                    name="person-outline"
+                    size={24}
+                    color="#333"
+                  />
                   <Text style={styles.optionText}>Edit Profile</Text>
                 </View>
-                <Entypo name="chevron-right" size={24} color="#333" />
+                <Entypo
+                  name="chevron-right"
+                  size={24}
+                  color="#333"
+                />
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.navigate('../AddressScreen')} style={styles.optionItem}>
+            <TouchableOpacity
+              onPress={() => router.navigate("../AddressScreen")}
+              style={styles.optionItem}>
               <View style={styles.option}>
                 <View style={styles.optionApart}>
-                  <SimpleLineIcons name="location-pin" size={24} color="#333" />
+                  <SimpleLineIcons
+                    name="location-pin"
+                    size={24}
+                    color="#333"
+                  />
                   <Text style={styles.optionText}>Address</Text>
                 </View>
-                <Entypo name="chevron-right" size={24} color="#333" />
+                <Entypo
+                  name="chevron-right"
+                  size={24}
+                  color="#333"
+                />
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.navigate('../HelpCenter')} style={styles.optionItem}>
+            <TouchableOpacity
+              onPress={() => router.navigate("../HelpCenter")}
+              style={styles.optionItem}>
               <View style={styles.option}>
                 <View style={styles.optionApart}>
-                  <Ionicons name="information-circle-outline" size={24} color="#333" />
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={24}
+                    color="#333"
+                  />
                   <Text style={styles.optionText}>Help Center</Text>
                 </View>
-                <Entypo name="chevron-right" size={24} color="#333" />
+                <Entypo
+                  name="chevron-right"
+                  size={24}
+                  color="#333"
+                />
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.logoutoptionItem}>
+            <TouchableOpacity
+              onPress={() => setModalVisible(true)}
+              style={styles.logoutoptionItem}>
               <View style={styles.logoutoptionApart}>
-                <MaterialIcons name="logout" size={24} color="red" />
+                <MaterialIcons
+                  name="logout"
+                  size={24}
+                  color="red"
+                />
                 <Text style={styles.logoutoptionText}>Logout</Text>
               </View>
             </TouchableOpacity>
           </View>
-          <Modal transparent={true} animationType="fade" visible={modalVisible}>
+          <Modal
+            transparent={true}
+            animationType="fade"
+            visible={modalVisible}>
             <View style={styles.overlay}>
               <View style={styles.modalContainer}>
                 {loggingOut ? (
-                  <ActivityIndicator size="large" color={Colors.primary} style={{ margin: 'auto' }} />
+                  <ActivityIndicator
+                    size="large"
+                    color={Colors.primary}
+                    style={{ margin: "auto" }}
+                  />
                 ) : (
                   <>
                     <Text style={styles.title}>Confirm Logout</Text>
                     <Text style={styles.message}>Are you sure you want to log out?</Text>
                     <View style={styles.buttonContainer}>
-                      <TouchableOpacity style={styles.confirmButton} onPress={handleLogout}>
+                      <TouchableOpacity
+                        style={styles.confirmButton}
+                        onPress={handleLogout}>
                         <Text style={styles.buttonText}>Yes, Logout</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => setModalVisible(false)}>
                         <Text style={styles.buttonText}>Cancel</Text>
                       </TouchableOpacity>
                     </View>
@@ -196,9 +312,9 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F4F4F4',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F4F4F4",
   },
   loadingText: {
     marginTop: 10,
@@ -207,11 +323,11 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   profileSection: {
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   profileImage: {
     width: 80,
@@ -221,44 +337,44 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   profileEmail: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   optionsContainer: {
     padding: 0,
   },
   optionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.tertiary,
   },
   option: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between'
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   logoutoptionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
     borderBottomColor: Colors.tertiary,
   },
   logoutoptionApart: {
-    flexDirection: 'row'
+    flexDirection: "row",
   },
   logoutoptionText: {
     fontSize: 16,
     marginLeft: 16,
-    color: 'red'
+    color: "red",
   },
   optionApart: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   optionText: {
     fontSize: 16,
@@ -266,31 +382,31 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalContainer: {
     width: 300,
     padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
   },
   message: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 20,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
   },
   confirmButton: {
     flex: 1,
@@ -301,14 +417,47 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
     padding: 10,
     borderRadius: 5,
     marginLeft: 10,
   },
   buttonText: {
-    textAlign: 'center',
-    color: 'white',
-    fontWeight: 'bold',
+    textAlign: "center",
+    color: "white",
+    fontWeight: "bold",
+  },
+  sellerBannerItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    backgroundColor: "#F5EBE6",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E6D8D0",
+    marginBottom: 4,
+  },
+  sellerBannerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  sellerBannerIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#5C3A2E",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sellerBannerTitle: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#2E1E17",
+  },
+  sellerBannerSub: {
+    fontSize: 12,
+    color: "#777",
+    marginTop: 2,
   },
 });
