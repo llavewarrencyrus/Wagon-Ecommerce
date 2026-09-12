@@ -41,7 +41,10 @@ export const getProducts = async (
   }
 
   if (filters.searchTerm && filters.searchTerm.trim()) {
-    const cleanSearch = filters.searchTerm.trim().replace(/[%_'"`,()]/g, ' ').trim();
+    const cleanSearch = filters.searchTerm
+      .trim()
+      .replace(/[%_'"`,()]/g, " ")
+      .trim();
     if (cleanSearch) {
       query = query.or(`product_name.ilike.%${cleanSearch}%,product_description.ilike.%${cleanSearch}%`);
     }
@@ -118,10 +121,10 @@ export const getProductById = async (productId: string | number) => {
 export const getCategoryList = async (id: number | null) => {
   const query = supabase.from("category").select("*");
 
-  const { data, error } = id === null ? await query.is("parent_id", null) : await query.contains("parent_id", [id]);
+  const { data, error } = id === null ? await query.is("parent_id", null) : await query.eq("parent_id", id);
 
   if (error) {
-    console.error("Error fetching product:", error.message);
+    console.error("Error fetching categories:", error.message);
     return null;
   }
 
@@ -145,7 +148,7 @@ export const getCartItems = async (userId: string) => {
   const { data, error } = await supabase
     .from("cart")
     .select(
-      "*, product_variant(product_id, products(product_name, product_price, product_discount), product_size(*), product_color(*), product_quantity)"
+      "*, product_variant(product_id, products(product_name, product_price, product_discount, seller_id), product_size(*), product_color(*), product_quantity)"
     )
     .eq("user_id", userId);
 
@@ -161,7 +164,7 @@ const getCartItem = async (userId: string, variantId: string): Promise<CartItemP
   const { data, error } = await supabase
     .from("cart")
     .select(
-      "*, product_variant(product_id, products(product_name, product_price, product_discount), product_size(*), product_color(*), product_quantity)"
+      "*, product_variant(product_id, products(product_name, product_price, product_discount, seller_id), product_size(*), product_color(*), product_quantity)"
     )
     .eq("variant_id", variantId)
     .eq("user_id", userId)
@@ -258,17 +261,11 @@ export const getAddress = async (addressId: string): Promise<AddressProps | null
 
 export const setDefaultAddress = async (userId: string, addressId: string): Promise<boolean> => {
   try {
-    const { error: resetError } = await supabase
-      .from("addresses")
-      .update({ prefer: false })
-      .eq("user_id", userId);
+    const { error: resetError } = await supabase.from("addresses").update({ prefer: false }).eq("user_id", userId);
 
     if (resetError) throw resetError;
 
-    const { error: setPrefError } = await supabase
-      .from("addresses")
-      .update({ prefer: true })
-      .eq("id", addressId);
+    const { error: setPrefError } = await supabase.from("addresses").update({ prefer: true }).eq("id", addressId);
 
     if (setPrefError) throw setPrefError;
 

@@ -55,24 +55,61 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return null;
   };
 
-  // Load user session and mode from AsyncStorage when the app starts
+  // Load user session and mode, and listen to auth changes
   useEffect(() => {
     const loadSession = async () => {
-      const savedUser = await AsyncStorage.getItem('user');
-      const savedMode = await AsyncStorage.getItem('activeMode');
+      try {
+        const savedMode = await AsyncStorage.getItem('activeMode');
+        if (savedMode === 'seller' || savedMode === 'buyer') {
+          setActiveMode(savedMode);
+        }
 
-      if (savedUser) {
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-        await fetchProfile(parsedUser.id);
-      }
-
-      if (savedMode === 'seller' || savedMode === 'buyer') {
-        setActiveMode(savedMode);
+        // Get current active session from Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const authUser = { id: session.user.id, email: session.user.email || '' };
+          setUser(authUser);
+          setIsAuthenticated(true);
+          await AsyncStorage.setItem('user', JSON.stringify(authUser));
+          await fetchProfile(session.user.id);
+        } else {
+          // Fallback to AsyncStorage cache
+          const savedUser = await AsyncStorage.getItem('user');
+          if (savedUser) {
+            const parsedUser = JSON.parse(savedUser);
+            setUser(parsedUser);
+            setIsAuthenticated(true);
+            await fetchProfile(parsedUser.id);
+          }
+        }
+      } catch (e) {
+        console.error('Error loading auth session:', e);
       }
     };
+
     loadSession();
+
+    // Listen for auth state changes (SIGN_IN, SIGN_OUT, TOKEN_REFRESHED, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const authUser = { id: session.user.id, email: session.user.email || '' };
+        setUser(authUser);
+        setIsAuthenticated(true);
+        await AsyncStorage.setItem('user', JSON.stringify(authUser));
+        await fetchProfile(session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        setIsAuthenticated(false);
+        setUser(null);
+        setIsSeller(false);
+        setActiveMode('buyer');
+        setStoreProfile(null);
+        await AsyncStorage.removeItem('user');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const refreshUserProfile = async () => {
@@ -94,8 +131,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Logout and clear session from AsyncStorage
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      await supabase.auth.signOut();
+    } catch (error: any) {
       console.error('Error logging out from Supabase:', error.message);
     }
 

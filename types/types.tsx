@@ -1,6 +1,6 @@
-import React, { ReactNode } from 'react';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
+import React, { ReactNode } from "react";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RouteProp } from "@react-navigation/native";
 
 //Interface
 export interface ProductWrapperProps {
@@ -8,21 +8,21 @@ export interface ProductWrapperProps {
 }
 
 export interface Variant {
-  variant_id: string
+  variant_id: string;
   product_color: {
     color: string;
     image: string;
-  }
+  };
   product_size: {
     size: string;
     dimension: string;
-  }
+  };
   product_quantity: number;
 }
 
 export interface Product {
   product_id: string;
-  seller_id?: string;
+  seller_id: string;
   product_name: string;
   product_description: string;
   product_image: Array<string>;
@@ -48,14 +48,14 @@ export interface StoreProfile {
   pickup_address?: string;
 }
 
-export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus = "pending" | "processing" | "shipped" | "delivered" | "cancelled";
 
 export type BuyerOrder = SellerOrder;
 
 export interface SellerOrder {
   id: string;
   user_id: string;
-  seller_id?: string;
+  seller_id: string;
   variant_id: string;
   address_id?: string;
   status: OrderStatus;
@@ -107,17 +107,17 @@ export interface ProductCardProps {
 export interface ProductListProps {
   products: Product[];
   header?: React.ReactNode | null;
-  onScroll?: ((event: any) => void);
+  onScroll?: (event: any) => void;
   scroll?: boolean;
 }
 export interface Category {
   id: number;
   name: string;
   parent_id: number | null;
-};
+}
 export interface DummySearch {
   value?: string;
-};
+}
 
 export interface Step1InsertProductProps {
   setProductData: (data: {
@@ -147,6 +147,7 @@ export interface CartItemProps {
       product_name: string;
       product_price: number;
       product_discount: number;
+      seller_id: string;
     };
     product_size: {
       id: string;
@@ -169,8 +170,8 @@ export interface AddressProps {
   id?: string;
   user_id?: string;
   title?: string;
-  name:string;
-  phone:string;
+  name: string;
+  phone: string;
   house_number_street: string;
   barangay: string;
   city_municipality: string;
@@ -195,21 +196,21 @@ export type RootStackParamList = {
   Refresh: { refresh?: boolean };
   Address: { id?: string };
   CheckOut: { item: CartItemProps[] };
-  OrdersScreen: { initialStatus?: OrderStatus | 'all' } | undefined;
+  OrdersScreen: { initialStatus?: OrderStatus | "all" } | undefined;
 };
 
 export type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-export type SearchScreenProp = RouteProp<RootStackParamList, 'Search'>;
+export type SearchScreenProp = RouteProp<RootStackParamList, "Search">;
 
-export type RefreshScreenProp = RouteProp<RootStackParamList, 'Refresh'>;
+export type RefreshScreenProp = RouteProp<RootStackParamList, "Refresh">;
 
-export type ProductScreenRouteProp = RouteProp<RootStackParamList, 'Product'>;
+export type ProductScreenRouteProp = RouteProp<RootStackParamList, "Product">;
 
-export type AddressScreenRouteProp = RouteProp<RootStackParamList, 'Address'>;
+export type AddressScreenRouteProp = RouteProp<RootStackParamList, "Address">;
 
-export type CheckOutScreenRouteProp = RouteProp<RootStackParamList, 'CheckOut'>;
+export type CheckOutScreenRouteProp = RouteProp<RootStackParamList, "CheckOut">;
 
-export type UpdateProductRouteProp = RouteProp<RootStackParamList, 'UpdateProduct'>;
+export type UpdateProductRouteProp = RouteProp<RootStackParamList, "UpdateProduct">;
 
-export type SellerMessagesNavigationProp = StackNavigationProp<RootStackParamList, 'SellerMessages'>;
+export type SellerMessagesNavigationProp = StackNavigationProp<RootStackParamList, "SellerMessages">;

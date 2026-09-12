@@ -148,12 +148,19 @@ const CartScreen: React.FC = () => {
     setModalVisible(false);
   };
 
-  const handleCheckout = () => {
-    const itemstoCheckout = cartItems.filter((item) => selectedItems.includes(item.cart_id));
+  const handleCheckout = async () => {
+    if (selectedItems.length === 0) {
+      Alert.alert("No Items Selected", "Please select at least one item to proceed to checkout.");
+      return;
+    }
+    // Re-fetch fresh cart items so that all product fields (including seller_id) are up-to-date
+    const freshItems = userId ? await getCartItems(userId) : cartItems;
+    const itemstoCheckout = freshItems.filter((item: CartItemProps) => selectedItems.includes(item.cart_id));
     if (itemstoCheckout.length === 0) {
       Alert.alert("No Items Selected", "Please select at least one item to proceed to checkout.");
       return;
     }
+    setCartItems(freshItems);
     setSelectedPurchase(itemstoCheckout);
     router.push("/CheckOutScreen");
   };

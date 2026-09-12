@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   TextInput,
@@ -11,17 +11,18 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+} from "react-native";
+import { useRouter, useLocalSearchParams, Stack } from "expo-router";
+import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { useAuth } from '@/context/AuthContext';
-import { useAddress } from '@/context/AddressProvider';
-import { AddressProps } from '@/types/types';
-import { getAddress, saveAddress, getAddresses } from '@/data/data';
-import { Colors } from '@/constants/Colors';
+import { useAuth } from "@/context/AuthContext";
+import { useAddress } from "@/context/AddressProvider";
+import { AddressProps } from "@/types/types";
+import { getAddress, saveAddress, getAddresses } from "@/data/data";
+import { Colors } from "@/constants/Colors";
+import Loading from "@/components/Loading";
 
-const PRESET_LABELS = ['Home', 'Work', 'Office', 'Other'];
+const PRESET_LABELS = ["Home", "Work", "Office", "Other"];
 
 const AddEditAddressScreen: React.FC = () => {
   const router = useRouter();
@@ -30,19 +31,19 @@ const AddEditAddressScreen: React.FC = () => {
 
   const { addresses, setAddresses } = useAddress();
   const params = useLocalSearchParams<{ id?: string }>();
-  const addressId = typeof params.id === 'string' ? params.id : undefined;
+  const addressId = typeof params.id === "string" ? params.id : undefined;
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
 
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [houseNumberStreet, setHouseNumberStreet] = useState('');
-  const [barangay, setBarangay] = useState('');
-  const [cityMunicipality, setCityMunicipality] = useState('');
-  const [province, setProvince] = useState('');
-  const [postalCode, setPostalCode] = useState('');
-  const [title, setTitle] = useState('Home');
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [houseNumberStreet, setHouseNumberStreet] = useState("");
+  const [barangay, setBarangay] = useState("");
+  const [cityMunicipality, setCityMunicipality] = useState("");
+  const [province, setProvince] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [title, setTitle] = useState("Home");
   const [isDefault, setIsDefault] = useState(false);
 
   useEffect(() => {
@@ -62,17 +63,17 @@ const AddEditAddressScreen: React.FC = () => {
     setFetching(false);
 
     if (data) {
-      setName(data.name || '');
-      setPhone(data.phone || '');
-      setHouseNumberStreet(data.house_number_street || '');
-      setBarangay(data.barangay || '');
-      setCityMunicipality(data.city_municipality || '');
-      setProvince(data.province || '');
-      setPostalCode(data.postal_code || '');
-      setTitle(data.title || 'Home');
+      setName(data.name || "");
+      setPhone(data.phone || "");
+      setHouseNumberStreet(data.house_number_street || "");
+      setBarangay(data.barangay || "");
+      setCityMunicipality(data.city_municipality || "");
+      setProvince(data.province || "");
+      setPostalCode(data.postal_code || "");
+      setTitle(data.title || "Home");
       setIsDefault(data.prefer === true);
     } else {
-      Alert.alert('Error', 'Failed to load address details.');
+      Alert.alert("Error", "Failed to load address details.");
       router.back();
     }
   };
@@ -80,27 +81,27 @@ const AddEditAddressScreen: React.FC = () => {
   const handleSave = async () => {
     // Validation
     if (!name.trim()) {
-      Alert.alert('Missing Field', 'Please enter the recipient full name.');
+      Alert.alert("Missing Field", "Please enter the recipient full name.");
       return;
     }
     if (!phone.trim()) {
-      Alert.alert('Missing Field', 'Please enter a valid contact phone number.');
+      Alert.alert("Missing Field", "Please enter a valid contact phone number.");
       return;
     }
     if (!houseNumberStreet.trim()) {
-      Alert.alert('Missing Field', 'Please enter the house number, building, or street name.');
+      Alert.alert("Missing Field", "Please enter the house number, building, or street name.");
       return;
     }
     if (!barangay.trim()) {
-      Alert.alert('Missing Field', 'Please enter the barangay.');
+      Alert.alert("Missing Field", "Please enter the barangay.");
       return;
     }
     if (!cityMunicipality.trim()) {
-      Alert.alert('Missing Field', 'Please enter the city or municipality.');
+      Alert.alert("Missing Field", "Please enter the city or municipality.");
       return;
     }
     if (!province.trim()) {
-      Alert.alert('Missing Field', 'Please enter the province.');
+      Alert.alert("Missing Field", "Please enter the province.");
       return;
     }
 
@@ -114,7 +115,7 @@ const AddEditAddressScreen: React.FC = () => {
       city_municipality: cityMunicipality.trim(),
       province: province.trim(),
       postal_code: postalCode.trim(),
-      title: title.trim() || 'Home',
+      title: title.trim() || "Home",
       prefer: isDefault,
     };
 
@@ -127,38 +128,33 @@ const AddEditAddressScreen: React.FC = () => {
         const refreshed = await getAddresses(userId);
         setAddresses(refreshed);
       }
-      Alert.alert('Success', addressId ? 'Address updated successfully.' : 'New address added successfully.');
+      Alert.alert("Success", addressId ? "Address updated successfully." : "New address added successfully.");
       router.back();
     } else {
-      Alert.alert('Error', 'Failed to save address. Please check your connection and try again.');
+      Alert.alert("Error", "Failed to save address. Please check your connection and try again.");
     }
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.screen}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+      behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <Stack.Screen
         options={{
-          headerTitle: addressId ? 'Edit Address' : 'Add New Address',
-          headerStyle: { backgroundColor: '#fff' },
+          headerTitle: addressId ? "Edit Address" : "Add New Address",
+          headerStyle: { backgroundColor: "#fff" },
           headerShadowVisible: false,
         }}
       />
 
       {fetching ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading address details...</Text>
-        </View>
+        <Loading />
       ) : (
         <ScrollView
           style={styles.container}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
+          keyboardShouldPersistTaps="handled">
           {/* Address Label Selector */}
           <View style={styles.sectionCard}>
             <Text style={styles.sectionLabel}>Address Label</Text>
@@ -169,17 +165,20 @@ const AddEditAddressScreen: React.FC = () => {
                   <TouchableOpacity
                     key={lbl}
                     style={[styles.labelChip, active && styles.labelChipActive]}
-                    onPress={() => setTitle(lbl)}
-                  >
+                    onPress={() => setTitle(lbl)}>
                     <Ionicons
-                      name={lbl === 'Home' ? 'home-outline' : lbl === 'Work' || lbl === 'Office' ? 'business-outline' : 'location-outline'}
+                      name={
+                        lbl === "Home"
+                          ? "home-outline"
+                          : lbl === "Work" || lbl === "Office"
+                            ? "business-outline"
+                            : "location-outline"
+                      }
                       size={14}
-                      color={active ? '#fff' : '#6b7280'}
+                      color={active ? "#fff" : "#6b7280"}
                       style={{ marginRight: 4 }}
                     />
-                    <Text style={[styles.labelChipText, active && styles.labelChipTextActive]}>
-                      {lbl}
-                    </Text>
+                    <Text style={[styles.labelChipText, active && styles.labelChipTextActive]}>{lbl}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -191,7 +190,12 @@ const AddEditAddressScreen: React.FC = () => {
             <Text style={styles.sectionLabel}>Contact Information</Text>
 
             <View style={styles.inputWrap}>
-              <Ionicons name="person-outline" size={18} color="#9ca3af" style={styles.fieldIcon} />
+              <Ionicons
+                name="person-outline"
+                size={18}
+                color="#9ca3af"
+                style={styles.fieldIcon}
+              />
               <TextInput
                 style={styles.input}
                 value={name}
@@ -202,7 +206,12 @@ const AddEditAddressScreen: React.FC = () => {
             </View>
 
             <View style={styles.inputWrap}>
-              <Ionicons name="call-outline" size={18} color="#9ca3af" style={styles.fieldIcon} />
+              <Ionicons
+                name="call-outline"
+                size={18}
+                color="#9ca3af"
+                style={styles.fieldIcon}
+              />
               <TextInput
                 style={styles.input}
                 value={phone}
@@ -219,7 +228,12 @@ const AddEditAddressScreen: React.FC = () => {
             <Text style={styles.sectionLabel}>Delivery Address</Text>
 
             <View style={styles.inputWrap}>
-              <Ionicons name="home-outline" size={18} color="#9ca3af" style={styles.fieldIcon} />
+              <Ionicons
+                name="home-outline"
+                size={18}
+                color="#9ca3af"
+                style={styles.fieldIcon}
+              />
               <TextInput
                 style={styles.input}
                 value={houseNumberStreet}
@@ -230,7 +244,12 @@ const AddEditAddressScreen: React.FC = () => {
             </View>
 
             <View style={styles.inputWrap}>
-              <Ionicons name="map-outline" size={18} color="#9ca3af" style={styles.fieldIcon} />
+              <Ionicons
+                name="map-outline"
+                size={18}
+                color="#9ca3af"
+                style={styles.fieldIcon}
+              />
               <TextInput
                 style={styles.input}
                 value={barangay}
@@ -242,7 +261,12 @@ const AddEditAddressScreen: React.FC = () => {
 
             <View style={styles.rowInputs}>
               <View style={[styles.inputWrap, { flex: 1, marginRight: 8 }]}>
-                <Ionicons name="business-outline" size={18} color="#9ca3af" style={styles.fieldIcon} />
+                <Ionicons
+                  name="business-outline"
+                  size={18}
+                  color="#9ca3af"
+                  style={styles.fieldIcon}
+                />
                 <TextInput
                   style={styles.input}
                   value={cityMunicipality}
@@ -253,7 +277,12 @@ const AddEditAddressScreen: React.FC = () => {
               </View>
 
               <View style={[styles.inputWrap, { flex: 1 }]}>
-                <Ionicons name="navigate-outline" size={18} color="#9ca3af" style={styles.fieldIcon} />
+                <Ionicons
+                  name="navigate-outline"
+                  size={18}
+                  color="#9ca3af"
+                  style={styles.fieldIcon}
+                />
                 <TextInput
                   style={styles.input}
                   value={province}
@@ -265,7 +294,12 @@ const AddEditAddressScreen: React.FC = () => {
             </View>
 
             <View style={styles.inputWrap}>
-              <Ionicons name="mail-outline" size={18} color="#9ca3af" style={styles.fieldIcon} />
+              <Ionicons
+                name="mail-outline"
+                size={18}
+                color="#9ca3af"
+                style={styles.fieldIcon}
+              />
               <TextInput
                 style={styles.input}
                 value={postalCode}
@@ -286,8 +320,8 @@ const AddEditAddressScreen: React.FC = () => {
               </Text>
             </View>
             <Switch
-              trackColor={{ false: '#d1d5db', true: Colors.primary }}
-              thumbColor={isDefault ? '#fff' : '#f4f3f4'}
+              trackColor={{ false: "#d1d5db", true: Colors.primary }}
+              thumbColor={isDefault ? "#fff" : "#f4f3f4"}
               onValueChange={setIsDefault}
               value={isDefault}
             />
@@ -298,14 +332,21 @@ const AddEditAddressScreen: React.FC = () => {
             style={[styles.saveBtn, loading && styles.saveBtnDisabled]}
             onPress={handleSave}
             disabled={loading}
-            activeOpacity={0.85}
-          >
+            activeOpacity={0.85}>
             {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator
+                color="#fff"
+                size="small"
+              />
             ) : (
               <>
-                <Feather name="check" size={18} color="#fff" style={{ marginRight: 6 }} />
-                <Text style={styles.saveBtnText}>{addressId ? 'Update Address' : 'Save Address'}</Text>
+                <Feather
+                  name="check"
+                  size={18}
+                  color="#fff"
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={styles.saveBtnText}>{addressId ? "Update Address" : "Save Address"}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -320,7 +361,7 @@ export default AddEditAddressScreen;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#f8f8f9',
+    backgroundColor: "#f8f8f9",
   },
   container: {
     flex: 1,
@@ -331,8 +372,8 @@ const styles = StyleSheet.create({
   },
   centered: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 24,
   },
   loadingText: {
@@ -341,27 +382,27 @@ const styles = StyleSheet.create({
     color: Colors.subtitle,
   },
   sectionCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 14,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
   },
   sectionLabel: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.title,
     marginBottom: 12,
   },
   labelChipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
   labelChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f3f4f6',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f3f4f6",
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
@@ -373,18 +414,18 @@ const styles = StyleSheet.create({
   },
   labelChipText: {
     fontSize: 13,
-    color: '#4b5563',
-    fontWeight: '600',
+    color: "#4b5563",
+    fontWeight: "600",
   },
   labelChipTextActive: {
-    color: '#fff',
+    color: "#fff",
   },
   inputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9fafb',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     borderRadius: 10,
     paddingHorizontal: 12,
     marginBottom: 10,
@@ -397,19 +438,19 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     fontSize: 14,
-    color: '#1f2937',
+    color: "#1f2937",
   },
   rowInputs: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   defaultToggleCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   toggleTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.title,
     marginBottom: 2,
   },
@@ -419,9 +460,9 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   saveBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: Colors.primary,
     paddingVertical: 15,
     borderRadius: 28,
@@ -436,8 +477,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   saveBtnText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

@@ -20,6 +20,7 @@ import { Product } from "@/types/types";
 import NetworkIssue from "@/components/NetworkIssue";
 import { useNetwork } from "@/components/NetworkContext";
 import Promos from "@/components/Index/Promos";
+import Loading from "@/components/Loading";
 
 const { width } = Dimensions.get("window");
 
@@ -34,10 +35,6 @@ const banners = [
 export function HomeScreen() {
   const { isConnected, refreshNetworkStatus } = useNetwork();
   const navigation = useNavigation();
-
-  if (!isConnected) {
-    return <NetworkIssue onRetry={refreshNetworkStatus} />;
-  }
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,16 +129,14 @@ export function HomeScreen() {
     </View>
   );
 
+  if (!isConnected) {
+    return <NetworkIssue onRetry={refreshNetworkStatus} />;
+  }
+
   return (
     <View style={styles.screen}>
       {loading && products.length === 0 ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator
-            size="large"
-            color={Colors.primary}
-          />
-          <Text style={styles.loadingText}>Curating your feed...</Text>
-        </View>
+        <Loading />
       ) : (
         <MasonryList
           ListHeaderComponent={

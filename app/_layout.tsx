@@ -267,7 +267,13 @@ export default function RootLayout() {
                       headerBackVisible: false,
                       headerLeft: () => (
                         <TouchableOpacity
-                          onPress={() => router.back()}
+                          onPress={() => {
+                            if (router.canGoBack()) {
+                              router.back();
+                            } else {
+                              router.replace("/(tabs)");
+                            }
+                          }}
                           style={{
                             backgroundColor: Colors.tertiary,
                             padding: 5,
@@ -300,7 +306,13 @@ export default function RootLayout() {
                       headerBackVisible: false,
                       headerLeft: () => (
                         <TouchableOpacity
-                          onPress={() => router.back()}
+                          onPress={() => {
+                            if (router.canGoBack()) {
+                              router.back();
+                            } else {
+                              router.replace("/(tabs)");
+                            }
+                          }}
                           style={{ padding: 5, marginRight: 25, borderRadius: 20 }}>
                           <AntDesign
                             name="arrowleft"
@@ -326,7 +338,13 @@ export default function RootLayout() {
                       headerTitle: "",
                       headerLeft: () => (
                         <TouchableOpacity
-                          onPress={() => router.back()}
+                          onPress={() => {
+                            if (router.canGoBack()) {
+                              router.back();
+                            } else {
+                              router.replace("/(tabs)");
+                            }
+                          }}
                           style={{ backgroundColor: Colors.tertiary, padding: 5, marginRight: 25, borderRadius: 20 }}>
                           <AntDesign
                             name="arrowleft"
@@ -344,7 +362,13 @@ export default function RootLayout() {
                       headerTitle: "",
                       headerLeft: () => (
                         <TouchableOpacity
-                          onPress={() => router.back()}
+                          onPress={() => {
+                            if (router.canGoBack()) {
+                              router.back();
+                            } else {
+                              router.replace("/(tabs)");
+                            }
+                          }}
                           style={{ backgroundColor: Colors.tertiary, padding: 5, marginRight: 25, borderRadius: 20 }}>
                           <AntDesign
                             name="arrowleft"

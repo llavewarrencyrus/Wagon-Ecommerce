@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigation, useRouter } from "expo-router";
 import {
-  ActivityIndicator,
   InteractionManager,
   StyleSheet,
   Image,
@@ -25,10 +24,6 @@ import { useNetwork } from "@/components/NetworkContext";
 
 export default function Account() {
   const { isConnected, refreshNetworkStatus } = useNetwork();
-
-  if (!isConnected) {
-    return <NetworkIssue onRetry={refreshNetworkStatus} />;
-  }
   const navigation = useNavigation();
   const router = useRouter();
   const { isAuthenticated, isSeller, logout, toggleMode, registerAsSeller } = useAuth();
@@ -106,6 +101,10 @@ export default function Account() {
     }
   };
 
+  if (!isConnected) {
+    return <NetworkIssue onRetry={refreshNetworkStatus} />;
+  }
+
   return (
     <>
       {loading ? (
@@ -141,46 +140,58 @@ export default function Account() {
               <View style={styles.ordersSectionHeader}>
                 <Text style={styles.ordersSectionTitle}>My Orders</Text>
                 <TouchableOpacity onPress={() => router.push("/OrdersScreen")}>
-                  <Text style={styles.viewAllOrdersText}>View All {'>'}</Text>
+                  <Text style={styles.viewAllOrdersText}>View All {">"}</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.orderShortcutsRow}>
                 <TouchableOpacity
                   style={styles.orderShortcutBtn}
-                  onPress={() => router.push({ pathname: "/OrdersScreen", params: { initialStatus: "pending" } })}
-                >
+                  onPress={() => router.push({ pathname: "/OrdersScreen", params: { initialStatus: "pending" } })}>
                   <View style={styles.shortcutIconWrap}>
-                    <Ionicons name="card-outline" size={22} color={Colors.primary} />
+                    <Ionicons
+                      name="card-outline"
+                      size={22}
+                      color={Colors.primary}
+                    />
                   </View>
                   <Text style={styles.shortcutLabel}>To Pay</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.orderShortcutBtn}
-                  onPress={() => router.push({ pathname: "/OrdersScreen", params: { initialStatus: "processing" } })}
-                >
+                  onPress={() => router.push({ pathname: "/OrdersScreen", params: { initialStatus: "processing" } })}>
                   <View style={styles.shortcutIconWrap}>
-                    <Ionicons name="cube-outline" size={22} color={Colors.primary} />
+                    <Ionicons
+                      name="cube-outline"
+                      size={22}
+                      color={Colors.primary}
+                    />
                   </View>
                   <Text style={styles.shortcutLabel}>Processing</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.orderShortcutBtn}
-                  onPress={() => router.push({ pathname: "/OrdersScreen", params: { initialStatus: "shipped" } })}
-                >
+                  onPress={() => router.push({ pathname: "/OrdersScreen", params: { initialStatus: "shipped" } })}>
                   <View style={styles.shortcutIconWrap}>
-                    <Ionicons name="car-outline" size={22} color={Colors.primary} />
+                    <Ionicons
+                      name="car-outline"
+                      size={22}
+                      color={Colors.primary}
+                    />
                   </View>
                   <Text style={styles.shortcutLabel}>To Receive</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.orderShortcutBtn}
-                  onPress={() => router.push({ pathname: "/OrdersScreen", params: { initialStatus: "delivered" } })}
-                >
+                  onPress={() => router.push({ pathname: "/OrdersScreen", params: { initialStatus: "delivered" } })}>
                   <View style={styles.shortcutIconWrap}>
-                    <Ionicons name="checkmark-done-circle-outline" size={22} color={Colors.primary} />
+                    <Ionicons
+                      name="checkmark-done-circle-outline"
+                      size={22}
+                      color={Colors.primary}
+                    />
                   </View>
                   <Text style={styles.shortcutLabel}>Completed</Text>
                 </TouchableOpacity>
@@ -329,11 +340,7 @@ export default function Account() {
             <View style={styles.overlay}>
               <View style={styles.modalContainer}>
                 {loggingOut ? (
-                  <ActivityIndicator
-                    size="large"
-                    color={Colors.primary}
-                    style={{ margin: "auto" }}
-                  />
+                  <Loading />
                 ) : (
                   <>
                     <Text style={styles.title}>Confirm Logout</Text>
