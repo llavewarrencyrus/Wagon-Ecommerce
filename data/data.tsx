@@ -230,18 +230,23 @@ export const updateCart = async (userId: string, variantId: string, cartId: stri
   return updatedItems && updatedItems.length > 0 ? (updatedItems[0] as CartItemProps | null) : null;
 };
 
-export const getAddresses = async (userId: string | undefined) => {
-  const { data, error } = await supabase.from("addresses").select("*").eq("user_id", userId);
+export const getAddresses = async (userId: string | undefined): Promise<AddressProps[]> => {
+  if (!userId) return [];
+  const { data, error } = await supabase
+    .from("addresses")
+    .select("*")
+    .eq("user_id", userId)
+    .order("prefer", { ascending: false });
 
   if (error) {
     console.error("Error fetching addresses:", error.message);
     return [];
   }
 
-  return data;
+  return data || [];
 };
 
-export const getAddress = async (addressId: string) => {
+export const getAddress = async (addressId: string): Promise<AddressProps | null> => {
   const { data, error } = await supabase.from("addresses").select("*").eq("id", addressId).single();
 
   if (error) {
@@ -251,14 +256,77 @@ export const getAddress = async (addressId: string) => {
   return data;
 };
 
-export const udpateAddress = async (address: AddressProps, addressId: string) => {
-  const { data, error } = await supabase.from("addresses").update(address).eq("id", addressId).select();
+export const setDefaultAddress = async (userId: string, addressId: string): Promise<boolean> => {
+  try {
+    const { error: resetError } = await supabase
+      .from("addresses")
+      .update({ prefer: false })
+      .eq("user_id", userId);
 
-  if (error) {
-    console.error("Error updating address:", error.message);
+    if (resetError) throw resetError;
+
+    const { error: setPrefError } = await supabase
+      .from("addresses")
+      .update({ prefer: true })
+      .eq("id", addressId);
+
+    if (setPrefError) throw setPrefError;
+
+    return true;
+  } catch (err: any) {
+    console.error("Error setting default address:", err.message);
+    return false;
+  }
+};
+
+export const saveAddress = async (
+  addressData: Partial<AddressProps>,
+  addressId?: string,
+  userId?: string
+): Promise<AddressProps | null> => {
+  try {
+    if (addressData.prefer && userId) {
+      await supabase.from("addresses").update({ prefer: false }).eq("user_id", userId);
+    }
+
+    if (addressId) {
+      const { data, error } = await supabase
+        .from("addresses")
+        .update(addressData)
+        .eq("id", addressId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } else {
+      const { data, error } = await supabase
+        .from("addresses")
+        .insert([{ ...addressData, user_id: userId }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  } catch (err: any) {
+    console.error("Error saving address:", err.message);
     return null;
   }
-  return data;
+};
+
+export const udpateAddress = async (address: AddressProps, addressId: string) => {
+  return saveAddress(address, addressId, address.user_id);
+};
+
+export const deleteAddress = async (addressId: string): Promise<boolean> => {
+  const { error } = await supabase.from("addresses").delete().eq("id", addressId);
+
+  if (error) {
+    console.error("Error deleting address:", error.message);
+    return false;
+  }
+  return true;
 };
 
 export const getSellerProducts = async (sellerId: string) => {
