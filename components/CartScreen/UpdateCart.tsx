@@ -142,7 +142,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, variants, v
 
         if (!userId) {
             Alert.alert('Not logged in', 'Please log in first!');
-            router.push('../LoginScreen');
+            router.push('/LoginScreen');
             return;
         }
         if (handleDisable()) return;

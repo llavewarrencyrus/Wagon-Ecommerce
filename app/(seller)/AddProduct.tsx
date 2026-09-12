@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { decode } from "base64-arraybuffer";
-import { supabase } from "../lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useNavigation } from "expo-router";
 import * as Progress from "react-native-progress";
 import Ionicons from "@expo/vector-icons/Ionicons";

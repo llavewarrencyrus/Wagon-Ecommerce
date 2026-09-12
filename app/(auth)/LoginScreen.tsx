@@ -122,7 +122,7 @@ const LoginScreen = () => {
               <Text style={styles.loginButtonText}>LOGIN</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={{ paddingHorizontal: 7, marginLeft: 'auto' }} onPress={() => router.push('../UnderConstruction')}>
+            <TouchableOpacity style={{ paddingHorizontal: 7, marginLeft: 'auto' }} onPress={() => router.push('/UnderConstruction')}>
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>

@@ -46,6 +46,11 @@ export default function Account() {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData?.user?.id;
 
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("users")
       .select(`username,email,profile_picture`)
@@ -75,7 +80,7 @@ export default function Account() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.replace("../LoginScreen");
+      router.replace("/LoginScreen");
     } else {
       fetchUserData();
     }
@@ -178,7 +183,7 @@ export default function Account() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.navigate("../UnderConstruction")}
+              onPress={() => router.push("/UnderConstruction")}
               style={styles.optionItem}>
               <View style={styles.option}>
                 <View style={styles.optionApart}>
@@ -197,7 +202,7 @@ export default function Account() {
               </View>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => router.navigate("../EditProfileScreen")}
+              onPress={() => router.push("/EditProfileScreen")}
               style={styles.optionItem}>
               <View style={styles.option}>
                 <View style={styles.optionApart}>
@@ -216,7 +221,7 @@ export default function Account() {
               </View>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => router.navigate("../AddressScreen")}
+              onPress={() => router.push("/AddressScreen")}
               style={styles.optionItem}>
               <View style={styles.option}>
                 <View style={styles.optionApart}>
@@ -235,7 +240,7 @@ export default function Account() {
               </View>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => router.navigate("../HelpCenter")}
+              onPress={() => router.push("/HelpCenter")}
               style={styles.optionItem}>
               <View style={styles.option}>
                 <View style={styles.optionApart}>

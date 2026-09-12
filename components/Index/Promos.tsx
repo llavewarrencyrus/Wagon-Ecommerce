@@ -34,7 +34,7 @@ const Promos: React.FC<PromosProps> = ({ colours, banners, products, setHeaderCo
                 data={banners}
                 keyExtractor={(item, index) => `banner-${index}`}
                 renderItem={({ item, index }) => (
-                    <Pressable key={`banner-${index}${item}`} onPress={() => router.push('../UnderConstruction')}>
+                    <Pressable key={`banner-${index}${item}`} onPress={() => router.push('/UnderConstruction')}>
                         <View style={[styles.slide, { backgroundColor: colours[index] }]}>
                             <Image source={item.uri} style={styles.image} />
                         </View>
@@ -48,7 +48,7 @@ const Promos: React.FC<PromosProps> = ({ colours, banners, products, setHeaderCo
             <View style={styles.featureWrapper}>
                 <View style={styles.featureContainer}>
                     <Text style={styles.title}>New Arrival</Text>
-                    <TouchableOpacity style={{ marginVertical: 'auto' }} onPress={() => router.push('../NewArrival')}>
+                    <TouchableOpacity style={{ marginVertical: 'auto' }} onPress={() => router.push('/NewArrival')}>
                         <Text style={styles.more}>View More {'>'} </Text>
                     </TouchableOpacity>
                 </View>
@@ -58,7 +58,7 @@ const Promos: React.FC<PromosProps> = ({ colours, banners, products, setHeaderCo
                 >
                     <View style={{ flexDirection: 'row', marginBottom: 10 }}>
                         {products.slice(0, 4).map((item) => (
-                            <Pressable key={item.product_id} onPress={() => router.push(`../ProductScreen?id=${item.product_id}`)}>
+                            <Pressable key={item.product_id} onPress={() => router.push(`/ProductScreen?id=${item.product_id}`)}>
                                 <View style={styles.productContainerA}>
                                     <Image source={{ uri: item.product_image[0] }} style={styles.productImage} />
                                     <Text style={[styles.productPrice, { color: item.product_discount ? Colors.discount : '#000' }]}>₱{item.product_price}</Text>
@@ -66,7 +66,7 @@ const Promos: React.FC<PromosProps> = ({ colours, banners, products, setHeaderCo
                             </Pressable>
                         ))}
 
-                        <TouchableOpacity onPress={() => router.push('../NewArrival')}>
+                        <TouchableOpacity onPress={() => router.push('/NewArrival')}>
                             <View style={styles.productContainerA}>
                                 <View style={[styles.productImage, { borderWidth: 1, borderColor: Colors.border }]}>
                                     <View style={{ flex: 1, margin: 'auto', justifyContent: 'center' }}>
@@ -83,7 +83,7 @@ const Promos: React.FC<PromosProps> = ({ colours, banners, products, setHeaderCo
             <View style={styles.featureWrapper}>
                 <View style={styles.featureContainer}>
                     <Text style={styles.title}>Top Sales</Text>
-                    <TouchableOpacity style={{ marginVertical: 'auto' }} onPress={() => router.push('../TopSales')}>
+                    <TouchableOpacity style={{ marginVertical: 'auto' }} onPress={() => router.push('/TopSales')}>
                         <Text style={styles.more}>View More {'>'} </Text>
                     </TouchableOpacity>
                 </View>
@@ -93,7 +93,7 @@ const Promos: React.FC<PromosProps> = ({ colours, banners, products, setHeaderCo
                 >
                     <View style={{ flexDirection: 'row', marginBottom: 10 }}>
                         {products.slice(0, 4).map((item) => (
-                            <Pressable key={item.product_id} onPress={() => router.push(`../ProductScreen?id=${item.product_id}`)}>
+                            <Pressable key={item.product_id} onPress={() => router.push(`/ProductScreen?id=${item.product_id}`)}>
                                 <View style={styles.productContainerA}>
                                     <Image source={{ uri: item.product_image[0] }} style={styles.productImage} />
                                     <Text style={[styles.productPrice, { color: item.product_discount ? Colors.discount : '#000' }]}>₱{item.product_price}</Text>
@@ -101,7 +101,7 @@ const Promos: React.FC<PromosProps> = ({ colours, banners, products, setHeaderCo
                             </Pressable>
                         ))}
 
-                        <TouchableOpacity onPress={() => router.push('../TopSales')}>
+                        <TouchableOpacity onPress={() => router.push('/TopSales')}>
                             <View style={styles.productContainerA}>
                                 <View style={[styles.productImage, { borderWidth: 1, borderColor: Colors.border }]}>
                                     <View style={{ flex: 1, margin: 'auto', justifyContent: 'center' }}>

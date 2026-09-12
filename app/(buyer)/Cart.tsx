@@ -50,7 +50,7 @@ const CartScreen: React.FC = () => {
 
   useEffect(() => {
     if (!user) {
-      router.replace("../LoginScreen");
+      router.replace("/LoginScreen");
     }
   }, [user]);
 
@@ -155,7 +155,7 @@ const CartScreen: React.FC = () => {
       Alert.alert("No Items Selected", "Please select at least one item to proceed to checkout.");
       return;
     }
-    router.push("../CheckOutScreen");
+    router.push("/CheckOutScreen");
   };
 
   const incrementQuantity = (item: CartItemProps) => {

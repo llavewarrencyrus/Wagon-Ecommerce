@@ -40,7 +40,7 @@ const AddressScreen: React.FC = () => {
   };
 
   const handleEdit = (addressId: string | undefined) => {
-    router.push(`../AddEditAddress?id=${addressId}`);
+    router.push(`/AddEditAddress?id=${addressId}`);
   };
 
   const handleDelete = async (addressId: string | undefined) => {
@@ -97,7 +97,7 @@ const AddressScreen: React.FC = () => {
             renderItem={renderItem}
             ListEmptyComponent={<Text>No addresses found. Add one!</Text>}
           />
-          <TouchableOpacity style={styles.addButton} onPress={() => router.push('../AddEditAddress')}>
+          <TouchableOpacity style={styles.addButton} onPress={() => router.push('/AddEditAddress')}>
             <Text style={styles.addButtonText}>Add New Address</Text>
           </TouchableOpacity>
         </>

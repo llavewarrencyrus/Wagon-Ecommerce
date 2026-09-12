@@ -85,7 +85,7 @@ const SearchScreen: React.FC = () => {
     } catch (error) {
       console.error('Failed to save recent keywords:', error);
     }
-    router.navigate(`../ResultScreen?keyword=${keyword}`);
+    router.push(`/ResultScreen?keyword=${keyword}`);
   };
 
   const handleSubmitEditing = () => {

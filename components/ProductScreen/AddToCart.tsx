@@ -119,7 +119,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ visible, onClose, colors, s
 
         if (!userId) {
             Alert.alert('Not logged in', 'Please log in first!');
-            router.push('../LoginScreen');
+            router.push('/LoginScreen');
             return;
         }
 

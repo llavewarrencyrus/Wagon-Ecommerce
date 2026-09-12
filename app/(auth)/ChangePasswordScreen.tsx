@@ -46,7 +46,7 @@ const ChangePasswordScreen = () => {
             setNewPassword('');
             setConfirmPassword('');
 
-            router.navigate('../Account');
+            router.push('/Account');
         } catch (error) {
             Alert.alert('Error', 'An unexpected error occurred. Please try again.');
         } finally {

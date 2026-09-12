@@ -13,7 +13,7 @@ const DummySearchBar: React.FC<DummySearch> = ({ value }) => {
   const navigation = useNavigation();
 
   const goToSearchScreen = () => {
-    router.push(`../SearchScreen?value=${value}`);
+    router.push(`/SearchScreen?value=${value}`);
   };
 
   

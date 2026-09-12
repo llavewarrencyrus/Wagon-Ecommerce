@@ -185,7 +185,7 @@ const EditProfileScreen = () => {
       <TouchableOpacity style={styles.updateButton} onPress={() => setModalVisible(true)}>
         <Text style={styles.updateButtonText}>Update</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.passButton} onPress={() => router.navigate('../CurrentPasswordScreen')}>
+      <TouchableOpacity style={styles.passButton} onPress={() => router.push('/CurrentPasswordScreen')}>
         <Text style={styles.passButtonText}>Change Password</Text>
       </TouchableOpacity>
       <Modal transparent={true} animationType="fade" visible={modalVisible}>

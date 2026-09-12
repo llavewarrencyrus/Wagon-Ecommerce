@@ -188,11 +188,11 @@ function ProductScreen() {
                             <ProductPreview product={product} setProductPrice={setPriceNumber} setDiscountedPrice={setFinalPrice} />
                             <ProductDescription colors={colors} sizes={sizes} />
                             <View style={styles.wrapper}>
-                                <TouchableWithoutFeedback onPress={() => router.push('../UnderConstruction')}>
+                                <TouchableWithoutFeedback onPress={() => router.push('/UnderConstruction')}>
                                     <View>
                                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 10 }}>
                                             <Text style={{ fontSize: 18, color: Colors.title }}>Ratings & Review</Text>
-                                            <TouchableOpacity onPress={() => router.push('../UnderConstruction')}>
+                                            <TouchableOpacity onPress={() => router.push('/UnderConstruction')}>
                                                 <Text style={{ color: Colors.subtitle }}>View All {'>'}</Text>
                                             </TouchableOpacity>
                                         </View>
@@ -237,7 +237,7 @@ function ProductScreen() {
                                         <Text>I am absolutely thrilled with my purchase! The product exceeded my expectations in every way. The quality is top-notch, and the attention to detail is remarkable. Shipping was prompt, and the customer service was exceptional. I will definitely be coming back for more. Highly recommend!</Text>
                                     </View>
                                 </View>
-                                <TouchableOpacity style={{ borderTopWidth: 1, borderColor: Colors.secondary }} onPress={() => router.push('../UnderConstruction')}>
+                                <TouchableOpacity style={{ borderTopWidth: 1, borderColor: Colors.secondary }} onPress={() => router.push('/UnderConstruction')}>
                                     <Text style={{ color: Colors.secondary, marginHorizontal: 'auto', marginVertical: 10, }}>View More {'>'}</Text>
                                 </TouchableOpacity>
                             </View>

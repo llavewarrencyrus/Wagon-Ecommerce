@@ -165,7 +165,7 @@ function Result() {
             ) : (
                 <LottieView
                     autoPlay
-                    source={require('../assets/loader/load.json')}
+                    source={require('@/assets/loader/load.json')}
                     style={{ width: '25%', height: '100%', margin: 'auto' }}
                 />
             )}

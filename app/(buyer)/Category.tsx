@@ -105,7 +105,7 @@ const SubcategoryScreen = ({ parentId, mainCategory }: {parentId: number, mainCa
   }
 
   const handleOnPress = (subcategory: any) => {
-    router.push(`../ResultScreen?category=${mainCategory}&keyword=${subcategory.category}`);
+    router.push(`/ResultScreen?category=${mainCategory}&keyword=${subcategory.category}`);
   };
 
   return (

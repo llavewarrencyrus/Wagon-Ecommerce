@@ -44,7 +44,7 @@ const CurrentPasswordScreen = () => {
             }
 
             // Navigate to Change Password screen if the current password is correct
-            router.navigate(`../ChangePasswordScreen`);
+            router.push('/ChangePasswordScreen');
         } catch (error) {
             Alert.alert('Error', 'An unexpected error occurred. Please try again.');
         }

@@ -45,14 +45,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ imageUri, title, price, id, d
       >
         {imageUri.map((item, index) => (
           <View key={index} style={styles.imageContainer}>
-            <Pressable onPress={() => router.push(`../ProductScreen?id=${id}`)}>
+            <Pressable onPress={() => router.push(`/ProductScreen?id=${id}`)}>
               <Image source={{uri: item}} style={styles.productImage} />
             </Pressable>
           </View>
         ))}
       </ScrollView>
 
-      <Pressable onPress={() => router.push(`../ProductScreen?id=${id}`)}>
+      <Pressable onPress={() => router.push(`/ProductScreen?id=${id}`)}>
         <View style={styles.productDesc}>
           <Text style={styles.productTitle} numberOfLines={2}>{title}</Text>
           <View style={{ flexDirection: 'row' }}>

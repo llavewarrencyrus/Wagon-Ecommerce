@@ -78,7 +78,7 @@ export function HomeScreen() {
       headerStyle: {
         backgroundColor: interpolatedColor,
       },
-      headerRight: () => <TouchableOpacity onPress={() => router.navigate('../Chat')} style={{ backgroundColor: Colors.tertiary, padding: 5, marginRight: 15, borderRadius: 20 }}><Ionicons name="chatbubbles-outline" size={24} color="black" /></TouchableOpacity>,
+      headerRight: () => <TouchableOpacity onPress={() => router.push('/Chat')} style={{ backgroundColor: Colors.tertiary, padding: 5, marginRight: 15, borderRadius: 20 }}><Ionicons name="chatbubbles-outline" size={24} color="black" /></TouchableOpacity>,
     });
   }, [headerColor])
 
