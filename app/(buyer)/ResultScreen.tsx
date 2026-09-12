@@ -1,212 +1,320 @@
 import React, { useState, useEffect } from 'react';
-
-import { View, Text, Dimensions, Pressable, StyleSheet, Image, Button } from 'react-native';
-import { useRoute, useIsFocused } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-
-import LottieView from 'lottie-react-native';
+import {
+  View,
+  Text,
+  Dimensions,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
+} from 'react-native';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 
 import { getProducts } from '@/data/data';
 import { Product } from '@/types/types';
-import { ProductScreenRouteProp } from '@/types/types';
 import { Colors } from '@/constants/Colors';
 import ProductList from '@/components/ProductList';
-
 import DummySearch from '@/components/DummySearch';
 
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faSort } from '@fortawesome/free-solid-svg-icons/';
-import { faSortUp } from '@fortawesome/free-solid-svg-icons/';
-import { faSortDown } from '@fortawesome/free-solid-svg-icons/';
-
+import { Ionicons } from '@expo/vector-icons';
 import NetworkIssue from '@/components/NetworkIssue';
 import { useNetwork } from '@/components/NetworkContext';
 
 const { width } = Dimensions.get('window');
 
+type SortOption = 'relevance' | 'latest' | 'topSales' | 'priceAsc' | 'priceDesc';
+
+const SUGGESTIONS = ['Hoodie', 'Sneakers', 'Headphones', 'Tote Bag', 'Diffuser', 'Watch'];
+
 function Result() {
-    const { isConnected, refreshNetworkStatus } = useNetwork();
+  const { isConnected, refreshNetworkStatus } = useNetwork();
+  const router = useRouter();
 
-    if (!isConnected) {
-        return <NetworkIssue onRetry={refreshNetworkStatus} />;
-    }
+  if (!isConnected) {
+    return <NetworkIssue onRetry={refreshNetworkStatus} />;
+  }
 
-    const [results, setResults] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(false);
+  const params = useLocalSearchParams<{ keyword?: string; category?: string }>();
+  const keyword = typeof params.keyword === 'string' ? params.keyword.trim() : '';
+  const category = typeof params.category === 'string' ? params.category.trim() : '';
 
-    const [isSorting, setIsSorting] = useState(false);
+  const [results, setResults] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedSort, setSelectedSort] = useState<SortOption>('relevance');
 
-    const [selectedSort, setSelectedSort] = useState<"relevance" | "latest" | "topSales" | "priceAsc" | "priceDesc" | ' '>(' ');
-    const [selectedSortOrder, setSelectedSortOrder] = useState<string>('asc');
-    const [priceIcon, setPriceIcon] = useState(faSort);
-    const [iconColor, setIconColor] = useState(Colors.tertiary);
-
-    const route = useRoute<ProductScreenRouteProp>();
-
-    const [keyword, setKeyword] = useState<string>('');
-    const [category, setCategory] = useState<string>('');
-
-    const isFocused = useIsFocused();
-
-    const sortBy = [
-        { label: 'Relevance', value: 'relevance' },
-        { label: 'Latest', value: 'latest' },
-        { label: 'Price', value: 'price' },
-    ];
-
-    const categoriesArray = Array.isArray(category) ? category : category?.split(',');
+  useEffect(() => {
+    let isActive = true;
+    setLoading(true);
 
     const fetchResults = async () => {
-        if(!isSorting) setLoading(true);
-        const fetchedProducts = await getProducts({ searchTerm: keyword, sortBy: selectedSort, category: category });
-        setResults(fetchedProducts);
-        setLoading(false);
-        setIsSorting(false);
+      try {
+        const fetched = await getProducts({
+          searchTerm: keyword || undefined,
+          sortBy: selectedSort,
+          category: category || undefined,
+        });
+
+        if (isActive) {
+          setResults(fetched || []);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error fetching search results:', error);
+        if (isActive) {
+          setResults([]);
+          setLoading(false);
+        }
+      }
     };
 
-    useEffect(() => {
-        const { keyword, category } = route.params;
+    fetchResults();
 
-        setKeyword(keyword || '');
-        setCategory(category || '');
-    }, [isFocused, route.params]);
-
-    useEffect(() => {
-        if (keyword || category) {
-            
-            fetchResults();
-
-            
-            
-        }
-    }, [keyword, category, selectedSort]);
-
-    const handleSortSelected = (selectedValues: any) => {
-        setIsSorting(true);
-        if (selectedValues == 'price') {
-            if (selectedSortOrder == 'asc') {
-                setSelectedSort('priceAsc');
-                setSelectedSortOrder('desc');
-                setPriceIcon(faSortUp);
-
-            } else {
-                setSelectedSortOrder('asc');
-                setSelectedSort('priceDesc');
-                setPriceIcon(faSortDown);
-            }
-            setIconColor(Colors.title);
-        } else {
-            setIconColor(Colors.tertiary);
-            setPriceIcon(faSort)
-            setSelectedSort(selectedValues);
-        }
+    return () => {
+      isActive = false;
     };
+  }, [keyword, category, selectedSort]);
 
-    const getRelevanceBtnStyle = () => ({
-        color: selectedSort === 'relevance' || selectedSort === ' ' ? Colors.title : Colors.tertiary,
-    });
-    const getLatestBtnStyle = () => ({
-        color: selectedSort === 'latest' ? Colors.title : Colors.tertiary,
-    });
-    const getPriceBtnStyle = () => ({
-        color: selectedSort === 'priceAsc' || selectedSort === 'priceDesc' ? Colors.title : Colors.tertiary,
-    });
-
-    if (!loading && results.length === 0) {
-        return (
-            <>
-                <Stack.Screen options={{
-                    headerTitle: () => <View style={{ width: width * 0.75 }}><DummySearch value={keyword} /></View>,
-                    headerStyle: {
-                        backgroundColor: 'white',
-                    },
-                    headerShadowVisible: false,
-                }} />
-                <View style={{ flex: 1, flexDirection: 'column', marginHorizontal: 'auto', marginTop: 50 }}>
-                    <View style={{ margin: 20 }}>
-                        <Image source={require('@/assets/images/no-results.png')} style={{ width: width / 3.5, height: width / 2.5, resizeMode: 'contain', marginHorizontal: 'auto' }} />
-                        <Text style={{ fontSize: 20, margin: 'auto' }}>No Results for </Text>
-                        <Text style={{ fontSize: 20, textAlign: 'center' }}>"{keyword}"</Text>
-                    </View>
-                </View>
-            </>
-        );
+  const handleSortChange = (sortKey: SortOption) => {
+    if (selectedSort !== sortKey) {
+      setSelectedSort(sortKey);
     }
+  };
 
-    return (
-        <>
-            <Stack.Screen options={{
-                headerTitle: () => <View style={{ width: width * 0.75 }}><DummySearch value={keyword} /></View>,
-                headerStyle: {
-                    backgroundColor: 'white',
-                },
-                headerShadowVisible: false,
-            }} />
-            {!loading ? (
-                <>
-                    <View style={{ flex: 1 }}>
-                        <View style={styles.sortWrapper}>
-                            <Pressable onPress={() => handleSortSelected('relevance')}>
-                                <Text style={[styles.sortBtn, getRelevanceBtnStyle()]}>Relevance</Text>
-                            </Pressable>
-                            <Pressable onPress={() => handleSortSelected('latest')}>
-                                <Text style={[styles.sortBtn, getLatestBtnStyle()]}>Latest</Text>
-                            </Pressable>
-                            <Pressable onPress={() => handleSortSelected('price')}>
-                                <Text style={[styles.sortBtn, getPriceBtnStyle()]}>Price <FontAwesomeIcon icon={priceIcon} color={iconColor} /></Text>
-                            </Pressable>
-                        </View>
-                        <ProductList
-                            products={results}
-                        />
-                        {isSorting ? <View style={{ position: 'absolute', width: width, height: '100%', backgroundColor: 'rgba(248,248,248,0.4)' }}></View> : null}
-                    </View>
-                </>
-            ) : (
-                <LottieView
-                    autoPlay
-                    source={require('@/assets/loader/load.json')}
-                    style={{ width: '25%', height: '100%', margin: 'auto' }}
-                />
-            )}
-        </>
-    );
+  const handleSuggestionPress = (suggestedKeyword: string) => {
+    router.replace(`/ResultScreen?keyword=${encodeURIComponent(suggestedKeyword)}`);
+  };
+
+  const displayTitle = keyword ? `"${keyword}"` : category ? `${category}` : 'All Products';
+
+  return (
+    <View style={styles.screen}>
+      <Stack.Screen
+        options={{
+          headerTitle: () => (
+            <View style={{ width: width * 0.75 }}>
+              <DummySearch value={keyword || category} />
+            </View>
+          ),
+          headerStyle: { backgroundColor: 'white' },
+          headerShadowVisible: false,
+        }}
+      />
+
+      {/* Sorting Filter Bar */}
+      <View style={styles.sortContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sortScrollContent}>
+          <TouchableOpacity
+            style={[styles.sortPill, selectedSort === 'relevance' && styles.sortPillActive]}
+            onPress={() => handleSortChange('relevance')}
+          >
+            <Text style={[styles.sortPillText, selectedSort === 'relevance' && styles.sortPillTextActive]}>
+              Relevance
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.sortPill, selectedSort === 'latest' && styles.sortPillActive]}
+            onPress={() => handleSortChange('latest')}
+          >
+            <Text style={[styles.sortPillText, selectedSort === 'latest' && styles.sortPillTextActive]}>
+              Latest
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.sortPill, selectedSort === 'topSales' && styles.sortPillActive]}
+            onPress={() => handleSortChange('topSales')}
+          >
+            <Text style={[styles.sortPillText, selectedSort === 'topSales' && styles.sortPillTextActive]}>
+              Top Sales
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.sortPill, selectedSort === 'priceAsc' && styles.sortPillActive]}
+            onPress={() => handleSortChange('priceAsc')}
+          >
+            <Text style={[styles.sortPillText, selectedSort === 'priceAsc' && styles.sortPillTextActive]}>
+              Price: Low → High
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.sortPill, selectedSort === 'priceDesc' && styles.sortPillActive]}
+            onPress={() => handleSortChange('priceDesc')}
+          >
+            <Text style={[styles.sortPillText, selectedSort === 'priceDesc' && styles.sortPillTextActive]}>
+              Price: High → Low
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+
+      {/* Results Header Count */}
+      {!loading && results.length > 0 && (
+        <View style={styles.resultCountBar}>
+          <Text style={styles.resultCountText}>
+            Showing <Text style={{ fontWeight: 'bold', color: Colors.title }}>{results.length}</Text> result{results.length === 1 ? '' : 's'} for {displayTitle}
+          </Text>
+        </View>
+      )}
+
+      {/* Main Content / Loading / Empty States */}
+      {loading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingLabel}>Searching products...</Text>
+        </View>
+      ) : results.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="search-outline" size={44} color={Colors.primary} />
+          </View>
+          <Text style={styles.emptyTitle}>No Results Found</Text>
+          <Text style={styles.emptySubtitle}>
+            We couldn't find any products matching <Text style={{ fontWeight: 'bold' }}>{displayTitle}</Text>.
+          </Text>
+
+          {/* Pivot Search Chips */}
+          <View style={styles.suggestionWrap}>
+            <Text style={styles.suggestionHeader}>Try searching for:</Text>
+            <View style={styles.suggestionChipsRow}>
+              {SUGGESTIONS.map((item, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.suggestionChip}
+                  onPress={() => handleSuggestionPress(item)}
+                >
+                  <Text style={styles.suggestionChipText}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      ) : (
+        <View style={{ flex: 1 }}>
+          <ProductList products={results} />
+        </View>
+      )}
+    </View>
+  );
 }
 
-const styles = StyleSheet.create({
-    sortWrapper: {
-        flexDirection: 'row',
-        width: width,
-        paddingHorizontal: 8,
-        paddingVertical: 15,
-        justifyContent: 'space-around',
-        backgroundColor: 'white',
-    },
-    sortBtn: {
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f8f8f8',
-    },
-    message: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
-        textAlign: 'center',
-        padding: 10,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
-        backgroundColor: '#fff',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 2,
-    },
-});
-
 export default Result;
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#f8f8f9',
+  },
+  sortContainer: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    paddingVertical: 8,
+  },
+  sortScrollContent: {
+    paddingHorizontal: 12,
+  },
+  sortPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: '#f3f4f6',
+    marginRight: 8,
+  },
+  sortPillActive: {
+    backgroundColor: Colors.primary,
+  },
+  sortPillText: {
+    fontSize: 13,
+    color: '#4b5563',
+    fontWeight: '500',
+  },
+  sortPillTextActive: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  resultCountBar: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: '#f8f8f9',
+  },
+  resultCountText: {
+    fontSize: 13,
+    color: '#6b7280',
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  loadingLabel: {
+    marginTop: 12,
+    fontSize: 14,
+    color: Colors.subtitle,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+  },
+  emptyIconCircle: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#f3ece7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.title,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: Colors.subtitle,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  suggestionWrap: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  suggestionHeader: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6b7280',
+    marginBottom: 12,
+  },
+  suggestionChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  suggestionChip: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 18,
+    margin: 4,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+  },
+  suggestionChipText: {
+    fontSize: 13,
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+});

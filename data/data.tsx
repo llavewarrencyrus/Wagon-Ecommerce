@@ -12,7 +12,7 @@ export const getProducts = async (
     material?: string;
     searchTerm?: string;
   } = {},
-  limit: number = 15,
+  limit: number = 20,
   offset: number = 0
 ) => {
   let query = supabase.from("products").select(`
@@ -24,24 +24,27 @@ export const getProducts = async (
       )
     `);
 
-  if (filters.category) {
-    query = query.contains("product_category", [filters.category]);
+  if (filters.category && filters.category.trim()) {
+    query = query.contains("product_category", [filters.category.trim()]);
   }
 
-  if (filters.size) {
-    query = query.eq("product_variant.product_size.size", filters.size);
+  if (filters.size && filters.size.trim()) {
+    query = query.eq("product_variant.product_size.size", filters.size.trim());
   }
 
-  if (filters.color) {
-    query = query.eq("product_variant.product_color.color", filters.color);
+  if (filters.color && filters.color.trim()) {
+    query = query.eq("product_variant.product_color.color", filters.color.trim());
   }
 
-  if (filters.material) {
-    query = query.eq("product_material", filters.material);
+  if (filters.material && filters.material.trim()) {
+    query = query.eq("product_material", filters.material.trim());
   }
 
-  if (filters.searchTerm) {
-    query = query.or(`product_name.ilike.%${filters.searchTerm}%,product_description.ilike.%${filters.searchTerm}%`);
+  if (filters.searchTerm && filters.searchTerm.trim()) {
+    const cleanSearch = filters.searchTerm.trim().replace(/[%_'"`,()]/g, ' ').trim();
+    if (cleanSearch) {
+      query = query.or(`product_name.ilike.%${cleanSearch}%,product_description.ilike.%${cleanSearch}%`);
+    }
   }
 
   if (filters.sortBy) {
@@ -52,10 +55,7 @@ export const getProducts = async (
       case "topSales":
         query = query.order("sales_count", { ascending: false });
         break;
-
       case "relevance":
-        query = query;
-        break;
       default:
         break;
     }
@@ -73,7 +73,7 @@ export const getProducts = async (
   if (filters.sortBy === "priceAsc" || filters.sortBy === "priceDesc") {
     const productsWithFinalPrice = data?.map((product) => ({
       ...product,
-      final_Price: product.product_price * (1 - product.product_discount / 100),
+      final_Price: product.product_price * (1 - (product.product_discount || 0) / 100),
     }));
 
     switch (filters.sortBy) {

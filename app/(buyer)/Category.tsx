@@ -144,7 +144,7 @@ const SubcategoryScreen = ({ parentId, mainCategory }: { parentId: number; mainC
 
   const handleOnPress = (subcategory: any) => {
     const subName = subcategory.name || subcategory.category || '';
-    router.push(`/ResultScreen?category=${encodeURIComponent(mainCategory)}&keyword=${encodeURIComponent(subName)}`);
+    router.push(`/ResultScreen?category=${encodeURIComponent(subName || mainCategory)}`);
   };
 
   return (
