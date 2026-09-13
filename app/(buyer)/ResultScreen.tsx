@@ -12,13 +12,15 @@ import { Ionicons } from "@expo/vector-icons";
 import NetworkIssue from "@/components/NetworkIssue";
 import { useNetwork } from "@/components/NetworkContext";
 import Loading from "@/components/Loading";
-import { SCREEN_WIDTH as width } from "@/constants/Layout";
+
+import { useWidth } from "@/context/WidthContext";
 
 type SortOption = "relevance" | "latest" | "topSales" | "priceAsc" | "priceDesc";
 
 const SUGGESTIONS = ["Hoodie", "Sneakers", "Headphones", "Tote Bag", "Diffuser", "Watch"];
 
 function Result() {
+  const width = useWidth();
   const { isConnected, refreshNetworkStatus } = useNetwork();
   const router = useRouter();
 

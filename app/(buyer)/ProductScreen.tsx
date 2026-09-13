@@ -29,8 +29,6 @@ import { useCart } from "@/context/CartProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useWidth } from "@/context/WidthContext";
 
-const deviceWidth = useWidth();
-
 // Native-only imports — guarded with lazy requires to avoid web crashes
 const ParallaxScrollView = Platform.OS !== "web" ? require("@/components/ParallaxScrollView").default : null;
 const GalleryPreview = Platform.OS !== "web" ? require("react-native-gallery-preview").default : null;
@@ -53,6 +51,8 @@ function ProductScreen() {
   const [prevImage, setPrevImage] = useState<{ uri: string }[]>([]);
 
   const { cartItems } = useCart();
+
+  const deviceWidth = useWidth();
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -338,11 +338,13 @@ function ProductScreen() {
             // Web: simple ScrollView with image strip at top (no native parallax/gallery)
             <ScrollView
               style={{ flex: 1 }}
-              contentContainerStyle={{ paddingBottom: 90 }}>
+              contentContainerStyle={{ paddingBottom: 90 }}
+              showsVerticalScrollIndicator={false}>
               {/* Horizontal image strip */}
               <ScrollView
                 horizontal
                 pagingEnabled
+                showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}
                 style={{ height: deviceWidth * 0.85, backgroundColor: "#e5e7eb" }}>
                 {product.product_image.map((uri, i) => (

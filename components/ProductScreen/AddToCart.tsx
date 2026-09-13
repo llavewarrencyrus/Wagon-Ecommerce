@@ -22,7 +22,7 @@ import { Colors } from "@/constants/Colors";
 import { addToCart } from "@/data/data";
 import { CartItemProps, Product } from "@/types/types";
 
-import { SCREEN_WIDTH as width } from "@/constants/Layout";
+import { useWidth } from "@/context/WidthContext";
 
 interface ProductModalProps {
   visible: boolean;
@@ -68,6 +68,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
 }) => {
   const [cartImageDis, setCartImage] = useState<string>();
   const [cartStock, setCartStock] = useState<number>(0);
+
+  const width = useWidth();
 
   const { cartItems, setCartItems, setSelectedPurchase } = useCart();
 
@@ -246,7 +248,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         <View style={styles.modalOverlay}>
           <TouchableOpacity
             activeOpacity={1}
-            style={styles.modalView}
+            style={[styles.modalView, { width: width }]}
             onPress={() => {}}>
             {/* Header Bar */}
             <View style={styles.modalHeaderRow}>
@@ -393,9 +395,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.55)",
     justifyContent: "flex-end",
+    alignItems: "center",
   },
   modalView: {
-    width: width,
+    width: "100%",
+    alignSelf: "center",
     padding: 18,
     paddingTop: 10,
     backgroundColor: "white",

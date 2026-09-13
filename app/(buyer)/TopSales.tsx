@@ -5,11 +5,12 @@ import ProductList from "@/components/ProductList";
 import { getProducts } from "@/data/data";
 
 import { Product } from "@/types/types";
-
-import { SCREEN_WIDTH as width } from "@/constants/Layout";
+import { useWidth } from "@/context/WidthContext";
 
 function TopSales() {
   const [newProducts, setNewProducts] = useState<Product[]>([]);
+
+  const width = useWidth();
 
   const fetchResults = async () => {
     const fetchedProducts = await getProducts({ sortBy: "topSales" });

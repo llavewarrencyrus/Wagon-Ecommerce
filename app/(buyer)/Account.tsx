@@ -31,6 +31,8 @@ export default function Account() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [nickname, setNickname] = useState("");
+  const [becomeSellerModalVisible, setBecomeSellerModalVisible] = useState(false);
+  const [becomeSellerLoading, setBecomeSellerLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [profilePic, setProfilePic] = useState("");
   const [refreshing, setRefreshing] = useState(false); // State for refreshing
@@ -61,6 +63,14 @@ export default function Account() {
     }
 
     setLoading(false);
+  };
+
+  const handleBecomeSeller = async () => {
+    setBecomeSellerLoading(true);
+    await registerAsSeller({ store_name: `${nickname || "My"} Store` });
+    setBecomeSellerModalVisible(false);
+    setBecomeSellerLoading(false);
+    router.replace("/(tabs)");
   };
 
   const onRefresh = async () => {
@@ -205,20 +215,7 @@ export default function Account() {
                   await toggleMode();
                   router.replace("/(tabs)");
                 } else {
-                  Alert.alert(
-                    "Become a Seller",
-                    "Would you like to activate your seller account and start listing products on Wagon?",
-                    [
-                      { text: "Later", style: "cancel" },
-                      {
-                        text: "Activate Seller Account",
-                        onPress: async () => {
-                          await registerAsSeller({ store_name: `${nickname || "My"} Store` });
-                          router.replace("/(tabs)");
-                        },
-                      },
-                    ]
-                  );
+                  setBecomeSellerModalVisible(true);
                 }
               }}
               style={styles.sellerBannerItem}>
@@ -357,6 +354,40 @@ export default function Account() {
                         <Text style={styles.buttonText}>Cancel</Text>
                       </TouchableOpacity>
                     </View>
+                  </>
+                )}
+              </View>
+            </View>
+          </Modal>
+          <Modal
+            transparent={true}
+            animationType="fade"
+            visible={becomeSellerModalVisible}
+            onRequestClose={() => setBecomeSellerModalVisible(false)}>
+            <View style={styles.overlay}>
+              <View style={styles.modalContainer}>
+                {becomeSellerLoading ? (
+                  <Loading />
+                ) : (
+                  <>
+                    <Text style={styles.title}>Confirm Become Seller</Text>
+                    <Text style={styles.message}>
+                      {isSeller ? "You are already a seller." : "Are you sure you want to become a seller?"}
+                    </Text>
+                    {!isSeller && (
+                      <View style={styles.buttonContainer}>
+                        <TouchableOpacity
+                          style={styles.confirmButton}
+                          onPress={handleBecomeSeller}>
+                          <Text style={styles.buttonText}>Yes, Become Seller</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.cancelButton}
+                          onPress={() => setBecomeSellerModalVisible(false)}>
+                          <Text style={styles.buttonText}>Cancel</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </>
                 )}
               </View>

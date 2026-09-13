@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -11,31 +11,30 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-} from 'react-native';
-import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import { AntDesign, Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+} from "react-native";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
+import { AntDesign, Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/context/AuthContext';
-import { Colors } from '@/constants/Colors';
-import { SCREEN_WIDTH as width } from '@/constants/Layout';
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
+import { Colors } from "@/constants/Colors";
 
-type StrengthLevel = 'empty' | 'weak' | 'fair' | 'strong';
+type StrengthLevel = "empty" | "weak" | "fair" | "strong";
 
 export default function SignupScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ redirect?: string }>();
   const { login } = useAuth();
 
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
-  const [focusedInput, setFocusedInput] = useState<'username' | 'email' | 'password' | 'confirm' | null>(null);
+  const [focusedInput, setFocusedInput] = useState<"username" | "email" | "password" | "confirm" | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -44,15 +43,15 @@ export default function SignupScreen() {
   };
 
   const getPasswordStrength = (pass: string): { level: StrengthLevel; score: number; label: string; color: string } => {
-    if (!pass) return { level: 'empty', score: 0, label: '', color: '#e5e7eb' };
+    if (!pass) return { level: "empty", score: 0, label: "", color: "#e5e7eb" };
     let score = 0;
     if (pass.length >= 8) score += 1;
     if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) score += 1;
     if (/[0-9]/.test(pass) || /[^A-Za-z0-9]/.test(pass)) score += 1;
 
-    if (score === 1) return { level: 'weak', score: 1, label: 'Weak', color: '#ef4444' };
-    if (score === 2) return { level: 'fair', score: 2, label: 'Good', color: '#f59e0b' };
-    return { level: 'strong', score: 3, label: 'Strong', color: '#10b981' };
+    if (score === 1) return { level: "weak", score: 1, label: "Weak", color: "#ef4444" };
+    if (score === 2) return { level: "fair", score: 2, label: "Good", color: "#f59e0b" };
+    return { level: "strong", score: 3, label: "Strong", color: "#10b981" };
   };
 
   const passwordStrength = getPasswordStrength(password);
@@ -68,27 +67,27 @@ export default function SignupScreen() {
     const trimmedConfirm = confirmPassword.trim();
 
     if (!trimmedUsername || !trimmedEmail || !trimmedPassword || !trimmedConfirm) {
-      setErrorMessage('Please fill in all fields.');
+      setErrorMessage("Please fill in all fields.");
       return;
     }
 
     if (trimmedUsername.length < 3) {
-      setErrorMessage('Username must be at least 3 characters.');
+      setErrorMessage("Username must be at least 3 characters.");
       return;
     }
 
     if (!validateEmail(trimmedEmail)) {
-      setErrorMessage('Please enter a valid email address.');
+      setErrorMessage("Please enter a valid email address.");
       return;
     }
 
     if (trimmedPassword.length < 8) {
-      setErrorMessage('Password must be at least 8 characters long.');
+      setErrorMessage("Password must be at least 8 characters long.");
       return;
     }
 
     if (trimmedPassword !== trimmedConfirm) {
-      setErrorMessage('Passwords do not match. Please verify.');
+      setErrorMessage("Passwords do not match. Please verify.");
       return;
     }
 
@@ -107,8 +106,8 @@ export default function SignupScreen() {
       });
 
       if (error) {
-        if (error.message.includes('User already registered')) {
-          setErrorMessage('An account with this email already exists. Please sign in.');
+        if (error.message.includes("User already registered")) {
+          setErrorMessage("An account with this email already exists. Please sign in.");
         } else {
           setErrorMessage(error.message);
         }
@@ -119,41 +118,41 @@ export default function SignupScreen() {
         const userId = data.user.id;
 
         // 2. Initialize public profile row in users table
-        const { error: profileError } = await supabase.from('users').upsert({
+        const { error: profileError } = await supabase.from("users").upsert({
           id: userId,
           email: trimmedEmail,
           username: trimmedUsername,
         });
 
         if (profileError) {
-          console.warn('Profile sync notice:', profileError.message);
+          console.warn("Profile sync notice:", profileError.message);
         }
 
         // 3. If session established immediately, log user in
         if (data.session) {
           await login({ id: userId, email: trimmedEmail });
-          Alert.alert('Welcome to Wagon!', `Account created successfully. Welcome, ${trimmedUsername}!`);
+          Alert.alert("Welcome to Wagon!", `Account created successfully. Welcome, ${trimmedUsername}!`);
           if (params.redirect) {
             router.replace(params.redirect as any);
           } else {
-            router.replace('/(tabs)');
+            router.replace("/(tabs)");
           }
         } else {
           Alert.alert(
-            'Account Created',
-            'Your account has been created. Please check your email to verify your address, then sign in.',
+            "Account Created",
+            "Your account has been created. Please check your email to verify your address, then sign in.",
             [
               {
-                text: 'Go to Login',
-                onPress: () => router.replace('/LoginScreen'),
+                text: "Go to Login",
+                onPress: () => router.replace("/LoginScreen"),
               },
             ]
           );
         }
       }
     } catch (err) {
-      console.error('Signup Exception: ', err);
-      setErrorMessage('An unexpected error occurred during registration. Please try again.');
+      console.error("Signup Exception: ", err);
+      setErrorMessage("An unexpected error occurred during registration. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -161,12 +160,11 @@ export default function SignupScreen() {
 
   return (
     <ImageBackground
-      source={require('@/assets/images/backDrop.jpg')}
+      source={require("@/assets/images/backDrop.jpg")}
       style={styles.backgroundImage}
-      resizeMode="cover"
-    >
+      resizeMode="cover">
       <LinearGradient
-        colors={['rgba(35, 18, 11, 0.75)', 'rgba(80, 42, 22, 0.6)', 'rgba(20, 10, 6, 0.85)']}
+        colors={["rgba(35, 18, 11, 0.75)", "rgba(80, 42, 22, 0.6)", "rgba(20, 10, 6, 0.85)"]}
         start={{ x: 0.2, y: 0 }}
         end={{ x: 0.8, y: 1 }}
         style={styles.gradientOverlay}
@@ -174,7 +172,7 @@ export default function SignupScreen() {
 
       <Stack.Screen
         options={{
-          headerTitle: '',
+          headerTitle: "",
           headerTransparent: true,
           headerBackVisible: false,
           headerLeft: () => (
@@ -183,13 +181,16 @@ export default function SignupScreen() {
                 if (router.canGoBack()) {
                   router.back();
                 } else {
-                  router.replace('/(tabs)');
+                  router.replace("/(tabs)");
                 }
               }}
               style={styles.backBtn}
-              activeOpacity={0.8}
-            >
-              <AntDesign name="arrowleft" size={20} color="#333" />
+              activeOpacity={0.8}>
+              <AntDesign
+                name="arrowleft"
+                size={20}
+                color="#333"
+              />
             </TouchableOpacity>
           ),
         }}
@@ -197,17 +198,19 @@ export default function SignupScreen() {
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+        behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
+          keyboardShouldPersistTaps="handled">
           {/* Brand Header */}
           <View style={styles.brandHeader}>
             <View style={styles.brandIconCircle}>
-              <Ionicons name="cart" size={32} color={Colors.primary} />
+              <Ionicons
+                name="cart"
+                size={32}
+                color={Colors.primary}
+              />
             </View>
             <Text style={styles.brandTitle}>WAGON</Text>
             <Text style={styles.brandSubtitle}>Create your shopping account in seconds</Text>
@@ -221,7 +224,12 @@ export default function SignupScreen() {
             {/* Error Banner */}
             {errorMessage ? (
               <View style={styles.errorBanner}>
-                <Ionicons name="alert-circle" size={18} color="#dc2626" style={{ marginRight: 6 }} />
+                <Ionicons
+                  name="alert-circle"
+                  size={18}
+                  color="#dc2626"
+                  style={{ marginRight: 6 }}
+                />
                 <Text style={styles.errorBannerText}>{errorMessage}</Text>
               </View>
             ) : null}
@@ -229,11 +237,11 @@ export default function SignupScreen() {
             {/* Username Field */}
             <View style={styles.fieldGroup}>
               <Text style={styles.inputLabel}>Username</Text>
-              <View style={[styles.inputContainer, focusedInput === 'username' && styles.inputFocused]}>
+              <View style={[styles.inputContainer, focusedInput === "username" && styles.inputFocused]}>
                 <Ionicons
                   name="person-outline"
                   size={20}
-                  color={focusedInput === 'username' ? Colors.primary : '#9ca3af'}
+                  color={focusedInput === "username" ? Colors.primary : "#9ca3af"}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -247,7 +255,7 @@ export default function SignupScreen() {
                   }}
                   autoCapitalize="none"
                   autoCorrect={false}
-                  onFocus={() => setFocusedInput('username')}
+                  onFocus={() => setFocusedInput("username")}
                   onBlur={() => setFocusedInput(null)}
                 />
               </View>
@@ -256,11 +264,11 @@ export default function SignupScreen() {
             {/* Email Field */}
             <View style={styles.fieldGroup}>
               <Text style={styles.inputLabel}>Email Address</Text>
-              <View style={[styles.inputContainer, focusedInput === 'email' && styles.inputFocused]}>
+              <View style={[styles.inputContainer, focusedInput === "email" && styles.inputFocused]}>
                 <Ionicons
                   name="mail-outline"
                   size={20}
-                  color={focusedInput === 'email' ? Colors.primary : '#9ca3af'}
+                  color={focusedInput === "email" ? Colors.primary : "#9ca3af"}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -275,7 +283,7 @@ export default function SignupScreen() {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   autoCorrect={false}
-                  onFocus={() => setFocusedInput('email')}
+                  onFocus={() => setFocusedInput("email")}
                   onBlur={() => setFocusedInput(null)}
                 />
               </View>
@@ -284,11 +292,11 @@ export default function SignupScreen() {
             {/* Password Field */}
             <View style={styles.fieldGroup}>
               <Text style={styles.inputLabel}>Password</Text>
-              <View style={[styles.inputContainer, focusedInput === 'password' && styles.inputFocused]}>
+              <View style={[styles.inputContainer, focusedInput === "password" && styles.inputFocused]}>
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color={focusedInput === 'password' ? Colors.primary : '#9ca3af'}
+                  color={focusedInput === "password" ? Colors.primary : "#9ca3af"}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -302,12 +310,14 @@ export default function SignupScreen() {
                   }}
                   secureTextEntry={!isPasswordVisible}
                   autoCapitalize="none"
-                  onFocus={() => setFocusedInput('password')}
+                  onFocus={() => setFocusedInput("password")}
                   onBlur={() => setFocusedInput(null)}
                 />
-                <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)} activeOpacity={0.7}>
+                <TouchableOpacity
+                  onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                  activeOpacity={0.7}>
                   <Ionicons
-                    name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                    name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
                     size={20}
                     color="#6b7280"
                   />
@@ -350,22 +360,21 @@ export default function SignupScreen() {
               <View
                 style={[
                   styles.inputContainer,
-                  focusedInput === 'confirm' && styles.inputFocused,
+                  focusedInput === "confirm" && styles.inputFocused,
                   isMismatch && styles.inputError,
                   isMatch && styles.inputSuccess,
-                ]}
-              >
+                ]}>
                 <Ionicons
                   name="shield-checkmark-outline"
                   size={20}
                   color={
                     isMatch
-                      ? '#10b981'
+                      ? "#10b981"
                       : isMismatch
-                      ? '#ef4444'
-                      : focusedInput === 'confirm'
-                      ? Colors.primary
-                      : '#9ca3af'
+                        ? "#ef4444"
+                        : focusedInput === "confirm"
+                          ? Colors.primary
+                          : "#9ca3af"
                   }
                   style={styles.inputIcon}
                 />
@@ -380,15 +389,14 @@ export default function SignupScreen() {
                   }}
                   secureTextEntry={!isConfirmPasswordVisible}
                   autoCapitalize="none"
-                  onFocus={() => setFocusedInput('confirm')}
+                  onFocus={() => setFocusedInput("confirm")}
                   onBlur={() => setFocusedInput(null)}
                 />
                 <TouchableOpacity
                   onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
-                  activeOpacity={0.7}
-                >
+                  activeOpacity={0.7}>
                   <Ionicons
-                    name={isConfirmPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                    name={isConfirmPasswordVisible ? "eye-off-outline" : "eye-outline"}
                     size={20}
                     color="#6b7280"
                   />
@@ -408,17 +416,25 @@ export default function SignupScreen() {
               onPress={onSubmit}
               style={[styles.signUpButton, loading && styles.signUpButtonDisabled]}
               disabled={loading}
-              activeOpacity={0.88}
-            >
+              activeOpacity={0.88}>
               {loading ? (
                 <View style={styles.btnRow}>
-                  <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
+                  <ActivityIndicator
+                    size="small"
+                    color="#fff"
+                    style={{ marginRight: 8 }}
+                  />
                   <Text style={styles.signUpButtonText}>Creating Account...</Text>
                 </View>
               ) : (
                 <View style={styles.btnRow}>
                   <Text style={styles.signUpButtonText}>Create Account</Text>
-                  <Feather name="user-plus" size={18} color="#fff" style={{ marginLeft: 6 }} />
+                  <Feather
+                    name="user-plus"
+                    size={18}
+                    color="#fff"
+                    style={{ marginLeft: 6 }}
+                  />
                 </View>
               )}
             </TouchableOpacity>
@@ -427,9 +443,13 @@ export default function SignupScreen() {
             <View style={styles.loginPrompt}>
               <Text style={styles.loginPromptText}>Already have an account?</Text>
               <TouchableOpacity
-                onPress={() => router.push({ pathname: '/LoginScreen', params: params.redirect ? { redirect: params.redirect } : {} })}
-                activeOpacity={0.7}
-              >
+                onPress={() =>
+                  router.push({
+                    pathname: "/LoginScreen",
+                    params: params.redirect ? { redirect: params.redirect } : {},
+                  })
+                }
+                activeOpacity={0.7}>
                 <Text style={styles.loginLink}> Sign In</Text>
               </TouchableOpacity>
             </View>
@@ -443,8 +463,8 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -454,91 +474,91 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 20,
     paddingTop: 80,
     paddingBottom: 40,
   },
   backBtn: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     width: 36,
     height: 36,
     borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginLeft: 10,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
   brandHeader: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   brandIconCircle: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 8,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   brandTitle: {
-    fontWeight: '900',
+    fontWeight: "900",
     fontSize: 30,
     letterSpacing: 6,
-    color: '#ffffff',
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    color: "#ffffff",
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.4)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   brandSubtitle: {
     fontSize: 13,
-    color: '#f3ece7',
+    color: "#f3ece7",
     marginTop: 4,
-    fontWeight: '500',
-    textAlign: 'center',
+    fontWeight: "500",
+    textAlign: "center",
   },
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderRadius: 24,
     paddingHorizontal: 22,
     paddingVertical: 24,
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
+    borderColor: "rgba(255, 255, 255, 0.8)",
   },
   cardTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.title,
-    textAlign: 'center',
+    textAlign: "center",
   },
   cardSubtitle: {
     fontSize: 13,
     color: Colors.subtitle,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 4,
     marginBottom: 16,
   },
   errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fef2f2',
-    borderColor: '#fecaca',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca",
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -548,37 +568,37 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 12,
-    color: '#b91c1c',
-    fontWeight: '500',
+    color: "#b91c1c",
+    fontWeight: "500",
   },
   fieldGroup: {
     marginBottom: 14,
   },
   inputLabel: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#374151',
+    fontWeight: "600",
+    color: "#374151",
     marginBottom: 5,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9fafb',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
     borderWidth: 1.5,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 48,
   },
   inputFocused: {
     borderColor: Colors.primary,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   inputError: {
-    borderColor: '#ef4444',
+    borderColor: "#ef4444",
   },
   inputSuccess: {
-    borderColor: '#10b981',
+    borderColor: "#10b981",
   },
   inputIcon: {
     marginRight: 10,
@@ -586,18 +606,18 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 14,
-    color: '#111827',
-    height: '100%',
+    color: "#111827",
+    height: "100%",
   },
   strengthContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginTop: 6,
     paddingHorizontal: 2,
   },
   strengthBarsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 4,
     flex: 1,
     marginRight: 12,
@@ -606,32 +626,32 @@ const styles = StyleSheet.create({
     height: 4,
     flex: 1,
     borderRadius: 2,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: "#e5e7eb",
   },
   strengthLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   mismatchText: {
     fontSize: 11,
-    color: '#ef4444',
+    color: "#ef4444",
     marginTop: 4,
-    fontWeight: '500',
+    fontWeight: "500",
     paddingLeft: 4,
   },
   matchText: {
     fontSize: 11,
-    color: '#10b981',
+    color: "#10b981",
     marginTop: 4,
-    fontWeight: '600',
+    fontWeight: "600",
     paddingLeft: 4,
   },
   signUpButton: {
     backgroundColor: Colors.primary,
     borderRadius: 14,
     height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 10,
     marginBottom: 16,
     elevation: 3,
@@ -644,29 +664,29 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   btnRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   signUpButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     letterSpacing: 0.3,
   },
   loginPrompt: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     paddingTop: 4,
   },
   loginPromptText: {
     fontSize: 13,
-    color: '#6b7280',
+    color: "#6b7280",
   },
   loginLink: {
     fontSize: 13,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.primary,
   },
 });

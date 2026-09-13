@@ -10,8 +10,6 @@ import { getAddresses, setDefaultAddress, deleteAddress } from "@/data/data";
 import { Colors } from "@/constants/Colors";
 import Loading from "@/components/Loading";
 
-import { SCREEN_WIDTH as width } from "@/constants/Layout";
-
 const AddressScreen: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();

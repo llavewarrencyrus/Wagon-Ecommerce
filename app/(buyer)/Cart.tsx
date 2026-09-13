@@ -23,12 +23,14 @@ import UpdateModal from "@/components/CartScreen/UpdateCart";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Loading from "@/components/Loading";
 import LottieView from "lottie-react-native";
-import { SCREEN_WIDTH as width } from "@/constants/Layout";
+import { useWidth } from "@/context/WidthContext";
 
 const CartScreen: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
   const userId = user?.id;
+
+  const width = useWidth();
 
   const { cartItems, setCartItems } = useCart();
   const { selectedPurchase, setSelectedPurchase } = useCart();
@@ -213,7 +215,9 @@ const CartScreen: React.FC = () => {
           />
           <Text style={styles.emptyCartText}>Your cart is empty!</Text>
           <Text style={styles.emptyCartSubText}>Looks like you haven't added anything to your cart yet.</Text>
-          <TouchableOpacity style={styles.startShoppingButton} onPress={() => router.push("/(tabs)")}>
+          <TouchableOpacity
+            style={styles.startShoppingButton}
+            onPress={() => router.push("/(tabs)")}>
             <Text style={styles.startShoppingText}>Start Shopping</Text>
           </TouchableOpacity>
         </View>
@@ -268,6 +272,7 @@ const CartScreen: React.FC = () => {
             )}
             keyExtractor={(item) => item.cart_id.toString()}
             contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
           />
 
           <View style={styles.totalContainer}>

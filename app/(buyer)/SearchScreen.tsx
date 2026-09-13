@@ -1,38 +1,32 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  View,
-  TextInput,
-  FlatList,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Pressable,
-  ScrollView,
-} from 'react-native';
-import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
-import { useIsFocused } from '@react-navigation/native';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { View, TextInput, FlatList, Text, StyleSheet, TouchableOpacity, Pressable, ScrollView } from "react-native";
+import { useRouter, Stack, useLocalSearchParams } from "expo-router";
+import { useIsFocused } from "@react-navigation/native";
+import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { searchKeywords } from '@/components/searchKeywords';
-import { Colors } from '@/constants/Colors';
-import { SCREEN_WIDTH as width } from '@/constants/Layout';
+import { searchKeywords } from "@/components/searchKeywords";
+import { Colors } from "@/constants/Colors";
+
+import { useWidth } from "@/context/WidthContext";
 
 const TRENDING_SEARCHES = [
-  'Oversized Hoodie',
-  'Wireless Headphones',
-  'Canvas Tote Bag',
-  'Leather Sneakers',
-  'Aroma Diffuser',
-  'Heritage Watch',
-  'Streetwear',
-  'French Terry',
-  'Accessories',
+  "Oversized Hoodie",
+  "Wireless Headphones",
+  "Canvas Tote Bag",
+  "Leather Sneakers",
+  "Aroma Diffuser",
+  "Heritage Watch",
+  "Streetwear",
+  "French Terry",
+  "Accessories",
 ];
 
 const SearchScreen: React.FC = () => {
   const params = useLocalSearchParams<{ value?: string }>();
-  const initialValue = typeof params.value === 'string' && params.value !== 'undefined' ? params.value : '';
+  const initialValue = typeof params.value === "string" && params.value !== "undefined" ? params.value : "";
+
+  const width = useWidth();
 
   const [query, setQuery] = useState<string>(initialValue);
   const [filteredKeywords, setFilteredKeywords] = useState<string[]>([]);
@@ -49,12 +43,12 @@ const SearchScreen: React.FC = () => {
 
   const loadRecentKeywords = async () => {
     try {
-      const saved = await AsyncStorage.getItem('recentKeywords');
+      const saved = await AsyncStorage.getItem("recentKeywords");
       if (saved) {
         setRecentKeywords(JSON.parse(saved));
       }
     } catch (error) {
-      console.error('Failed to load recent keywords:', error);
+      console.error("Failed to load recent keywords:", error);
     }
   };
 
@@ -65,7 +59,7 @@ const SearchScreen: React.FC = () => {
   }, [isFocused]);
 
   useEffect(() => {
-    if (params.value && params.value !== 'undefined') {
+    if (params.value && params.value !== "undefined") {
       setQuery(params.value);
     }
   }, [params.value]);
@@ -94,11 +88,14 @@ const SearchScreen: React.FC = () => {
     if (!trimmed) return;
 
     try {
-      const updated = [trimmed, ...recentKeywords.filter((k) => k.toLowerCase() !== trimmed.toLowerCase())].slice(0, 15);
+      const updated = [trimmed, ...recentKeywords.filter((k) => k.toLowerCase() !== trimmed.toLowerCase())].slice(
+        0,
+        15
+      );
       setRecentKeywords(updated);
-      await AsyncStorage.setItem('recentKeywords', JSON.stringify(updated));
+      await AsyncStorage.setItem("recentKeywords", JSON.stringify(updated));
     } catch (error) {
-      console.error('Failed to save recent keyword:', error);
+      console.error("Failed to save recent keyword:", error);
     }
 
     setFilteredKeywords([]);
@@ -109,18 +106,18 @@ const SearchScreen: React.FC = () => {
     try {
       const updated = recentKeywords.filter((k) => k !== keyword);
       setRecentKeywords(updated);
-      await AsyncStorage.setItem('recentKeywords', JSON.stringify(updated));
+      await AsyncStorage.setItem("recentKeywords", JSON.stringify(updated));
     } catch (error) {
-      console.error('Failed to delete recent keyword:', error);
+      console.error("Failed to delete recent keyword:", error);
     }
   };
 
   const handleClearRecentSearches = async () => {
     try {
-      await AsyncStorage.removeItem('recentKeywords');
+      await AsyncStorage.removeItem("recentKeywords");
       setRecentKeywords([]);
     } catch (error) {
-      console.error('Failed to clear recent keywords:', error);
+      console.error("Failed to clear recent keywords:", error);
     }
   };
 
@@ -148,9 +145,14 @@ const SearchScreen: React.FC = () => {
       <Stack.Screen
         options={{
           headerTitle: () => (
-            <View style={styles.headerInputWrap}>
+            <View style={[styles.headerInputWrap, { width: width * 0.78 }]}>
               <View style={styles.searchBar}>
-                <Ionicons name="search-outline" size={18} color="#888" style={{ marginLeft: 6 }} />
+                <Ionicons
+                  name="search-outline"
+                  size={18}
+                  color="#888"
+                  style={{ marginLeft: 6 }}
+                />
                 <TextInput
                   ref={searchInputRef}
                   style={styles.input}
@@ -162,19 +164,28 @@ const SearchScreen: React.FC = () => {
                   returnKeyType="search"
                 />
                 {query.length > 0 && (
-                  <TouchableOpacity onPress={() => handleChangeText('')} style={styles.clearInputBtn}>
-                    <Ionicons name="close-circle" size={18} color="#999" />
+                  <TouchableOpacity
+                    onPress={() => handleChangeText("")}
+                    style={styles.clearInputBtn}>
+                    <Ionicons
+                      name="close-circle"
+                      size={18}
+                      color="#999"
+                    />
                   </TouchableOpacity>
                 )}
               </View>
             </View>
           ),
-          headerStyle: { backgroundColor: '#fff' },
+          headerStyle: { backgroundColor: "#fff" },
           headerShadowVisible: false,
         }}
       />
 
-      <ScrollView style={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
         {/* Real-time Autocomplete Suggestions Dropdown */}
         {filteredKeywords.length > 0 && (
           <View style={styles.suggestionsContainer}>
@@ -182,11 +193,20 @@ const SearchScreen: React.FC = () => {
               <TouchableOpacity
                 key={idx}
                 style={styles.suggestionRow}
-                onPress={() => handleSelectKeyword(item)}
-              >
-                <Ionicons name="search-outline" size={16} color="#aaa" style={{ marginRight: 10 }} />
+                onPress={() => handleSelectKeyword(item)}>
+                <Ionicons
+                  name="search-outline"
+                  size={16}
+                  color="#aaa"
+                  style={{ marginRight: 10 }}
+                />
                 {renderHighlightedText(item)}
-                <Feather name="arrow-up-left" size={16} color="#bbb" style={{ marginLeft: 'auto' }} />
+                <Feather
+                  name="arrow-up-left"
+                  size={16}
+                  color="#bbb"
+                  style={{ marginLeft: "auto" }}
+                />
               </TouchableOpacity>
             ))}
           </View>
@@ -196,8 +216,12 @@ const SearchScreen: React.FC = () => {
         {recentKeywords.length > 0 && (
           <View style={styles.sectionWrap}>
             <View style={styles.sectionHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <MaterialCommunityIcons name="history" size={18} color={Colors.primary} />
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <MaterialCommunityIcons
+                  name="history"
+                  size={18}
+                  color={Colors.primary}
+                />
                 <Text style={styles.sectionTitle}>Recent Searches</Text>
               </View>
               <TouchableOpacity onPress={handleClearRecentSearches}>
@@ -207,15 +231,20 @@ const SearchScreen: React.FC = () => {
 
             <View style={styles.chipsWrap}>
               {recentKeywords.map((item, index) => (
-                <View key={index} style={styles.recentChip}>
+                <View
+                  key={index}
+                  style={styles.recentChip}>
                   <TouchableOpacity onPress={() => handleSelectKeyword(item)}>
                     <Text style={styles.recentChipText}>{item}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => handleDeleteRecentKeyword(item)}
-                    style={styles.chipDeleteBtn}
-                  >
-                    <Ionicons name="close" size={13} color="#666" />
+                    style={styles.chipDeleteBtn}>
+                    <Ionicons
+                      name="close"
+                      size={13}
+                      color="#666"
+                    />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -226,8 +255,12 @@ const SearchScreen: React.FC = () => {
         {/* 2. Trending & Discover Suggestions */}
         <View style={styles.sectionWrap}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons name="flame-outline" size={18} color="#e11d48" />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Ionicons
+                name="flame-outline"
+                size={18}
+                color="#e11d48"
+              />
               <Text style={styles.sectionTitle}>Trending Searches</Text>
             </View>
           </View>
@@ -237,8 +270,7 @@ const SearchScreen: React.FC = () => {
               <TouchableOpacity
                 key={index}
                 style={styles.trendingChip}
-                onPress={() => handleSelectKeyword(item)}
-              >
+                onPress={() => handleSelectKeyword(item)}>
                 <Text style={styles.trendingChipText}>{item}</Text>
               </TouchableOpacity>
             ))}
@@ -254,22 +286,21 @@ export default SearchScreen;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   container: {
     flex: 1,
     padding: 16,
   },
   headerInputWrap: {
-    width: width * 0.78,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   searchBar: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f3f4f6',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f3f4f6",
     borderRadius: 22,
     paddingHorizontal: 8,
     height: 38,
@@ -279,67 +310,67 @@ const styles = StyleSheet.create({
     height: 38,
     paddingHorizontal: 8,
     fontSize: 14,
-    color: '#1f2937',
+    color: "#1f2937",
   },
   clearInputBtn: {
     padding: 4,
   },
   suggestionsContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#f0f0f0',
+    borderColor: "#f0f0f0",
     marginBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
   },
   suggestionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#f9fafb',
+    borderBottomColor: "#f9fafb",
   },
   suggestionText: {
     fontSize: 14,
-    color: '#4b5563',
+    color: "#4b5563",
   },
   boldMatch: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.primary,
   },
   sectionWrap: {
     marginBottom: 24,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.title,
     marginLeft: 6,
   },
   clearAllText: {
     fontSize: 13,
     color: Colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   chipsWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
   recentChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f3f4f6',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f3f4f6",
     paddingLeft: 12,
     paddingRight: 6,
     paddingVertical: 6,
@@ -349,17 +380,17 @@ const styles = StyleSheet.create({
   },
   recentChipText: {
     fontSize: 13,
-    color: '#374151',
-    fontWeight: '500',
+    color: "#374151",
+    fontWeight: "500",
   },
   chipDeleteBtn: {
     padding: 4,
     marginLeft: 4,
   },
   trendingChip: {
-    backgroundColor: '#faf6f4',
+    backgroundColor: "#faf6f4",
     borderWidth: 1,
-    borderColor: '#e8ded8',
+    borderColor: "#e8ded8",
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 18,
@@ -369,6 +400,6 @@ const styles = StyleSheet.create({
   trendingChipText: {
     fontSize: 13,
     color: Colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

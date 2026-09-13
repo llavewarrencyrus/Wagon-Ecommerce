@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import { ProductCardProps } from "@/types/types";
-import { SCREEN_WIDTH as width } from "@/constants/Layout";
+import { useWidth } from "@/context/WidthContext";
 
 const calculateDiscountedPrice = (price: number, discount?: number): number => {
   if (!discount || discount <= 0) return price;
@@ -17,6 +17,8 @@ const formatPrice = (price: number): string => {
 
 const ProductCard: React.FC<ProductCardProps> = ({ imageUri, title, price, id, discount, rating }) => {
   const router = useRouter();
+
+  const width = useWidth();
 
   const finalPrice = calculateDiscountedPrice(price, discount);
   const primaryImage =
@@ -32,7 +34,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ imageUri, title, price, id, d
       onPress={() => router.push(`/ProductScreen?id=${id}`)}
       activeOpacity={0.88}>
       {/* Product Image Thumbnail */}
-      <View style={styles.imageWrap}>
+      <View style={[styles.imageWrap, { height: width * 0.44 }]}>
         <Image
           source={{ uri: primaryImage }}
           style={styles.productImage}
@@ -94,7 +96,6 @@ const styles = StyleSheet.create({
   },
   imageWrap: {
     width: "100%",
-    height: width * 0.44,
     backgroundColor: "#f3f4f6",
     position: "relative",
   },
