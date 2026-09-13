@@ -11,7 +11,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Dimensions,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { AntDesign, Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -20,8 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/Colors';
-
-const { width } = Dimensions.get('window');
+import { SCREEN_WIDTH as width } from '@/constants/Layout';
 
 type StrengthLevel = 'empty' | 'weak' | 'fair' | 'strong';
 

@@ -3,6 +3,11 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RouteProp } from "@react-navigation/native";
 
 //Interface
+export interface WidthProp {
+  width: number;
+  setWidth: (width: number) => void;
+}
+
 export interface ProductWrapperProps {
   children: ReactNode;
 }

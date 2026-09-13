@@ -21,7 +21,7 @@ import { getAddresses, removeFromCart } from "@/data/data";
 import { Colors } from "@/constants/Colors";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 
-const { width } = Dimensions.get("window");
+import { SCREEN_WIDTH as width } from "@/constants/Layout";
 
 const calculateTotalAmount = (items: CartItemProps[]): number => {
   let total = 0;

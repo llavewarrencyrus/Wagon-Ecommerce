@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Dimensions,
   LayoutAnimation,
   Platform,
   UIManager,
@@ -16,12 +15,11 @@ import {
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons, Feather, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
+import { SCREEN_WIDTH as width } from '@/constants/Layout';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-
-const { width } = Dimensions.get('window');
 
 type FAQCategory = 'all' | 'shipping' | 'returns' | 'payment' | 'tracking' | 'account';
 

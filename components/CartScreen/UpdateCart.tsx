@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, Image, Dimensions, Alert } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { useCart } from '@/context/CartProvider';
@@ -11,8 +11,7 @@ import { Colors } from '@/constants/Colors';
 import { addToCart } from '@/data/data';
 import { CartItemProps, Product, Variant } from '@/types/types';
 import { updateCart } from '@/data/data';
-
-const { width } = Dimensions.get('window');
+import { SCREEN_WIDTH as width } from '@/constants/Layout';
 
 interface UpdateModalProps {
     visible: boolean;

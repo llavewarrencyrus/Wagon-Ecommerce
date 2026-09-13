@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   Image,
-  Dimensions,
   Modal,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -24,8 +23,7 @@ import UpdateModal from "@/components/CartScreen/UpdateCart";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Loading from "@/components/Loading";
 import LottieView from "lottie-react-native";
-
-const { width } = Dimensions.get("window");
+import { SCREEN_WIDTH as width } from "@/constants/Layout";
 
 const CartScreen: React.FC = () => {
   const router = useRouter();

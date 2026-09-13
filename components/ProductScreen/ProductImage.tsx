@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, Image, StyleSheet, ScrollView, Dimensions, Text, Pressable } from 'react-native';
+import { View, Image, StyleSheet, ScrollView, Text, Pressable } from 'react-native';
 
 import { Colors } from '@/constants/Colors';
-
-const { width } = Dimensions.get('window');
+import { SCREEN_WIDTH as width } from '@/constants/Layout';
 
 interface ProductImageProps {
     imageUris: string[];

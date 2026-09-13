@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Dimensions, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 
 import { getProducts } from "@/data/data";
@@ -12,8 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import NetworkIssue from "@/components/NetworkIssue";
 import { useNetwork } from "@/components/NetworkContext";
 import Loading from "@/components/Loading";
-
-const { width } = Dimensions.get("window");
+import { SCREEN_WIDTH as width } from "@/constants/Layout";
 
 type SortOption = "relevance" | "latest" | "topSales" | "priceAsc" | "priceDesc";
 

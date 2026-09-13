@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Image, StyleSheet, ScrollView, Dimensions, Animated, StatusBar, Text, Modal, TouchableOpacity, TouchableWithoutFeedback, Pressable } from 'react-native';
+import { View, Image, StyleSheet, ScrollView, Animated, StatusBar, Text, Modal, TouchableOpacity, TouchableWithoutFeedback, Pressable } from 'react-native';
 
 import { StarRatingDisplay } from 'react-native-star-rating-widget';
 
 import { Colors } from '@/constants/Colors';
 import { ProductPreviewProps } from '@/types/types';
-
-const { width } = Dimensions.get('window');
+import { SCREEN_WIDTH as width } from '@/constants/Layout';
 
 function ProductPreview({ setProductPrice, setDiscountedPrice, product }: ProductPreviewProps) {
     const [priceNumber, setPriceNumber] = useState<number>(0);

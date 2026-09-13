@@ -8,22 +8,21 @@ import {
   Pressable,
   Image,
   TouchableOpacity,
-  Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import { Product } from "@/types/types";
-
-const { width } = Dimensions.get("window");
+import { useWidth } from "@/context/WidthContext";
 
 interface PromosProps {
   colours: string[];
   banners: { uri: any; title?: string; subtitle?: string; target?: string }[];
   products: Product[];
-  setHeaderColor?: (color: string) => void;
+  setHeaderColor: (color: string) => void;
 }
 
 const CATEGORY_SHORTCUTS = [
@@ -68,23 +67,32 @@ const Promos: React.FC<PromosProps> = ({ colours, products, setHeaderColor }) =>
   const bannerListRef = useRef<FlatList>(null);
   const isInteracting = useRef(false);
 
+  const width = useWidth();
+
   // Sync header color whenever activeSlide changes
   useEffect(() => {
-    if (setHeaderColor && colours && colours[activeSlide]) {
+    if (colours[activeSlide]) {
       setHeaderColor(colours[activeSlide]);
     }
-  }, [activeSlide, colours, setHeaderColor]);
+  }, [activeSlide]);
 
   // Auto-play banner carousel every 4 seconds
   useEffect(() => {
     const timer = setInterval(() => {
       if (!isInteracting.current && BANNER_PROMOS.length > 0) {
         const nextSlide = (activeSlide + 1) % BANNER_PROMOS.length;
-        bannerListRef.current?.scrollToIndex({
-          index: nextSlide,
-          animated: true,
-        });
-        setActiveSlide(nextSlide);
+        if (Platform.OS === "web") {
+          bannerListRef.current?.scrollToOffset({
+            offset: nextSlide,
+            animated: true,
+          });
+        } else {
+          bannerListRef.current?.scrollToIndex({
+            index: nextSlide,
+            animated: true,
+          });
+        }
+        return nextSlide;
       }
     }, 4000);
 
@@ -130,11 +138,14 @@ const Promos: React.FC<PromosProps> = ({ colours, products, setHeaderColor }) =>
           renderItem={({ item, index }) => (
             <Pressable
               key={`banner-${index}`}
-              style={[styles.bannerCard, { backgroundColor: colours?.[index] || colours?.[0] }]}
+              style={[
+                styles.bannerCard,
+                { backgroundColor: colours?.[index] || colours?.[0], width: width, height: width * 0.48 },
+              ]}
               onPress={() => router.push(item.route as any)}>
               <Image
                 source={item.uri}
-                style={styles.bannerImage}
+                style={[styles.bannerImage, { width: width }]}
               />
               {/* Pagination Dots */}
               <View style={styles.dotsContainer}>
@@ -156,7 +167,7 @@ const Promos: React.FC<PromosProps> = ({ colours, products, setHeaderColor }) =>
           {CATEGORY_SHORTCUTS.map((cat) => (
             <TouchableOpacity
               key={cat.id}
-              style={styles.shortcutItem}
+              style={[styles.shortcutItem, { width: (width - 44) / 6 }]}
               onPress={() => {
                 if (cat.route) {
                   router.push(cat.route as any);
@@ -266,7 +277,7 @@ const Promos: React.FC<PromosProps> = ({ colours, products, setHeaderColor }) =>
       </View>
 
       {/* 4. Top Sales Horizontal Feed */}
-      <View style={styles.sectionWrap}>
+      <View style={[styles.sectionWrap, { marginBottom: 12 }]}>
         <View style={styles.sectionHeader}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <View style={[styles.badgeSparkle, { backgroundColor: "#fee2e2" }]}>
@@ -362,12 +373,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   bannerCard: {
-    width: width,
-    height: width * 0.48,
     position: "relative",
   },
   bannerImage: {
-    width: width,
     height: "100%",
     resizeMode: "cover",
   },
@@ -444,7 +452,6 @@ const styles = StyleSheet.create({
   },
   shortcutItem: {
     alignItems: "center",
-    width: (width - 44) / 6,
   },
   shortcutIconCircle: {
     width: 44,

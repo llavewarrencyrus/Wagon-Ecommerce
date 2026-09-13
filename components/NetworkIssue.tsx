@@ -1,8 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, Dimensions } from 'react-native';
-
-const { width } = Dimensions.get('window');
+import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { SCREEN_WIDTH as width } from '@/constants/Layout';
 
 interface NetworkIssueProps {
     onRetry: () => void;

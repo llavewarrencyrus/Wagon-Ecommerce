@@ -14,10 +14,9 @@ import { useFonts } from "expo-font";
 import DummySearch from "@/components/DummySearch";
 import { CartProvider } from "@/context/CartProvider";
 import { AddressProvider } from "@/context/AddressProvider";
+import { useSetWidth, WidthProvider } from "@/context/WidthContext";
 
 SplashScreen.preventAutoHideAsync();
-
-const { width } = Dimensions.get("window");
 
 // Android Device Simulator Presets (Width × Height in dp)
 interface AndroidPreset {
@@ -28,14 +27,15 @@ interface AndroidPreset {
 }
 
 const ANDROID_PRESETS: AndroidPreset[] = [
-  { id: "standard", name: "Standard Android (Google Pixel · 412 × 915)", width: 412, height: 915 },
-  { id: "compact", name: "Small Android (Compact · 360 × 640)", width: 360, height: 640 },
-  { id: "large", name: "Large Android (Samsung Galaxy Ultra · 440 × 950)", width: 440, height: 950 },
-  { id: "tablet", name: "Android Tablet (Galaxy Tab · 800 × 1280)", width: 800, height: 1280 },
+  { id: "pixel9", name: "Google Pixel 9 (412 × 917)", width: 412, height: 917 },
+  { id: "galaxy_a55", name: "Samsung Galaxy A55 (360 × 800)", width: 360, height: 800 },
+  { id: "galaxy_s24_ultra", name: "Samsung Galaxy S24 Ultra (384 × 824)", width: 384, height: 824 },
+  { id: "galaxy_tab_s9", name: "Samsung Galaxy Tab S9 (800 × 1280)", width: 800, height: 1280 },
 ];
 
 function WebSimulator({ children }: { children: React.ReactNode }) {
   const [selectedPreset, setSelectedPreset] = useState<AndroidPreset>(ANDROID_PRESETS[0]);
+  const setWidth = useSetWidth();
 
   return (
     <div style={webStyles.shell}>
@@ -58,7 +58,10 @@ function WebSimulator({ children }: { children: React.ReactNode }) {
             value={selectedPreset.id}
             onChange={(e) => {
               const found = ANDROID_PRESETS.find((p) => p.id === e.target.value);
-              if (found) setSelectedPreset(found);
+              if (found) {
+                setSelectedPreset(found);
+                setWidth(found.width);
+              }
             }}
             style={webStyles.select}>
             {ANDROID_PRESETS.map((preset) => (
@@ -381,10 +384,22 @@ export default function RootLayout() {
                     }}
                   />
                   <Stack.Screen name="(buyer)/HelpCenter" />
-                  <Stack.Screen name="(buyer)/CheckOutScreen" options={{ title: "Checkout" }} />
-                  <Stack.Screen name="(buyer)/OrdersScreen" options={{ title: "My Orders" }} />
-                  <Stack.Screen name="(buyer)/AddressScreen" options={{ title: "My Addresses" }} />
-                  <Stack.Screen name="(buyer)/AddEditAddress" options={{ title: "Address Details" }} />
+                  <Stack.Screen
+                    name="(buyer)/CheckOutScreen"
+                    options={{ title: "Checkout" }}
+                  />
+                  <Stack.Screen
+                    name="(buyer)/OrdersScreen"
+                    options={{ title: "My Orders" }}
+                  />
+                  <Stack.Screen
+                    name="(buyer)/AddressScreen"
+                    options={{ title: "My Addresses" }}
+                  />
+                  <Stack.Screen
+                    name="(buyer)/AddEditAddress"
+                    options={{ title: "Address Details" }}
+                  />
 
                   {/* Seller Screens */}
                   <Stack.Screen
@@ -425,8 +440,12 @@ export default function RootLayout() {
   );
 
   if (Platform.OS === "web") {
-    return <WebSimulator>{appContent}</WebSimulator>;
+    return (
+      <WidthProvider>
+        <WebSimulator>{appContent}</WebSimulator>
+      </WidthProvider>
+    );
   }
 
-  return appContent;
+  return <WidthProvider>{appContent}</WidthProvider>;
 }

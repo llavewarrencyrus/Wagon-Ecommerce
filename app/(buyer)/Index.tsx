@@ -1,14 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  ActivityIndicator,
-  Animated,
-  TouchableOpacity,
-  StatusBar,
-} from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, Animated, TouchableOpacity, StatusBar } from "react-native";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import MasonryList from "@react-native-seoul/masonry-list";
 import ProductCard from "@/components/ProductCard";
@@ -21,8 +12,7 @@ import NetworkIssue from "@/components/NetworkIssue";
 import { useNetwork } from "@/components/NetworkContext";
 import Promos from "@/components/Index/Promos";
 import Loading from "@/components/Loading";
-
-const { width } = Dimensions.get("window");
+import { useWidth } from "@/context/WidthContext";
 
 const colours = ["#8291b0", "#d59876", "#beada5", "#ff9c9c"];
 const banners = [
@@ -45,6 +35,8 @@ export function HomeScreen() {
 
   const [currentBarStyle, setCurrentBarStyle] = useState<"light-content" | "dark-content">("light-content");
   const [statusBarStyle, setStatusBarStyle] = useState<"light-content" | "dark-content">("light-content");
+
+  const width = useWidth();
 
   const isFocused = useIsFocused();
 
@@ -86,6 +78,9 @@ export function HomeScreen() {
     outputRange: [headerColor, "#fff"],
     extrapolate: "clamp",
   });
+
+  const numColumns = width > 1024 ? 4 : width > 768 ? 3 : 2;
+
   useEffect(() => {
     navigation.setOptions({
       headerStyle: {
@@ -151,7 +146,7 @@ export function HomeScreen() {
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
           data={products}
-          numColumns={2}
+          numColumns={numColumns}
           keyExtractor={(item) => item.product_id || String(Math.random())}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}

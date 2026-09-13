@@ -6,7 +6,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
   Pressable,
   ScrollView,
 } from 'react-native';
@@ -17,8 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { searchKeywords } from '@/components/searchKeywords';
 import { Colors } from '@/constants/Colors';
-
-const { width } = Dimensions.get('window');
+import { SCREEN_WIDTH as width } from '@/constants/Layout';
 
 const TRENDING_SEARCHES = [
   'Oversized Hoodie',

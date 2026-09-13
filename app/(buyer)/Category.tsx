@@ -1,15 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
-  Dimensions,
-  Pressable,
-  Image,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, Pressable, Image, TouchableOpacity } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,7 +12,7 @@ import { Colors } from "@/constants/Colors";
 import DummySearch from "@/components/DummySearch";
 import Loading from "@/components/Loading";
 
-const { width } = Dimensions.get("window");
+import { useWidth } from "@/context/WidthContext";
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -104,6 +94,7 @@ const CategoryScreen = () => {
 };
 
 const SubcategoryScreen = ({ parentId, mainCategory }: { parentId: number; mainCategory: string }) => {
+  const width = useWidth();
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFetched, setIsFetched] = useState(false);
@@ -162,7 +153,7 @@ const SubcategoryScreen = ({ parentId, mainCategory }: { parentId: number; mainC
           const title = item.name || item.category || "Category";
           return (
             <Pressable
-              style={styles.item}
+              style={[styles.item, { width: width / 2 - 16 }]}
               onPress={() => handleOnPress(item)}>
               <View style={styles.itemInner}>
                 {item.image ? (
@@ -224,7 +215,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   item: {
-    width: width / 2 - 16,
     height: 140,
     margin: 4,
     backgroundColor: "#ffffff",

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -12,33 +12,30 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
-  Dimensions,
-} from 'react-native';
-import { Link, Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import { AntDesign, Ionicons, Feather } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+} from "react-native";
+import { Link, Stack, useRouter, useLocalSearchParams } from "expo-router";
+import { AntDesign, Ionicons, Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/context/AuthContext';
-import { Colors } from '@/constants/Colors';
-
-const { width } = Dimensions.get('window');
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
+import { Colors } from "@/constants/Colors";
 
 const LoginScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ redirect?: string }>();
   const { login } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [focusedInput, setFocusedInput] = useState<'email' | 'password' | null>(null);
+  const [focusedInput, setFocusedInput] = useState<"email" | "password" | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Forgot Password Modal State
   const [forgotModalVisible, setForgotModalVisible] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
 
   const validateEmail = (val: string) => {
@@ -52,12 +49,12 @@ const LoginScreen = () => {
     const trimmedPassword = password.trim();
 
     if (!trimmedEmail || !trimmedPassword) {
-      setErrorMessage('Please enter both email and password.');
+      setErrorMessage("Please enter both email and password.");
       return;
     }
 
     if (!validateEmail(trimmedEmail)) {
-      setErrorMessage('Please enter a valid email address.');
+      setErrorMessage("Please enter a valid email address.");
       return;
     }
 
@@ -70,12 +67,12 @@ const LoginScreen = () => {
       });
 
       if (error) {
-        console.log('Login Error: ', error);
+        console.log("Login Error: ", error);
         // User friendly error translation
-        if (error.message.includes('Invalid login credentials')) {
-          setErrorMessage('Invalid email or password. Please try again.');
-        } else if (error.message.includes('Email not confirmed')) {
-          setErrorMessage('Please verify your email address before logging in.');
+        if (error.message.includes("Invalid login credentials")) {
+          setErrorMessage("Invalid email or password. Please try again.");
+        } else if (error.message.includes("Email not confirmed")) {
+          setErrorMessage("Please verify your email address before logging in.");
         } else {
           setErrorMessage(error.message);
         }
@@ -91,12 +88,12 @@ const LoginScreen = () => {
         if (params.redirect) {
           router.replace(params.redirect as any);
         } else {
-          router.replace('/(tabs)');
+          router.replace("/(tabs)");
         }
       }
     } catch (err) {
-      console.error('Unexpected Login Error: ', err);
-      setErrorMessage('An unexpected connection error occurred. Please try again.');
+      console.error("Unexpected Login Error: ", err);
+      setErrorMessage("An unexpected connection error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -105,11 +102,11 @@ const LoginScreen = () => {
   const handleForgotPassword = async () => {
     const targetEmail = forgotEmail.trim() || email.trim();
     if (!targetEmail) {
-      Alert.alert('Forgot Password', 'Please enter your account email address.');
+      Alert.alert("Forgot Password", "Please enter your account email address.");
       return;
     }
     if (!validateEmail(targetEmail)) {
-      Alert.alert('Forgot Password', 'Please enter a valid email address.');
+      Alert.alert("Forgot Password", "Please enter a valid email address.");
       return;
     }
 
@@ -117,17 +114,17 @@ const LoginScreen = () => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(targetEmail);
       if (error) {
-        Alert.alert('Reset Password', error.message);
+        Alert.alert("Reset Password", error.message);
       } else {
         Alert.alert(
-          'Email Sent',
+          "Email Sent",
           `A password reset link has been sent to ${targetEmail}. Please check your inbox and spam folder.`
         );
         setForgotModalVisible(false);
-        setForgotEmail('');
+        setForgotEmail("");
       }
     } catch (err: any) {
-      Alert.alert('Error', 'Unable to send password reset email. Please try again.');
+      Alert.alert("Error", "Unable to send password reset email. Please try again.");
     } finally {
       setForgotLoading(false);
     }
@@ -135,12 +132,11 @@ const LoginScreen = () => {
 
   return (
     <ImageBackground
-      source={require('@/assets/images/backDrop.jpg')}
+      source={require("@/assets/images/backDrop.jpg")}
       style={styles.backgroundImage}
-      resizeMode="cover"
-    >
+      resizeMode="cover">
       <LinearGradient
-        colors={['rgba(35, 18, 11, 0.75)', 'rgba(80, 42, 22, 0.6)', 'rgba(20, 10, 6, 0.85)']}
+        colors={["rgba(35, 18, 11, 0.75)", "rgba(80, 42, 22, 0.6)", "rgba(20, 10, 6, 0.85)"]}
         start={{ x: 0.2, y: 0 }}
         end={{ x: 0.8, y: 1 }}
         style={styles.gradientOverlay}
@@ -148,7 +144,7 @@ const LoginScreen = () => {
 
       <Stack.Screen
         options={{
-          headerTitle: '',
+          headerTitle: "",
           headerTransparent: true,
           headerBackVisible: false,
           headerLeft: () => (
@@ -157,13 +153,16 @@ const LoginScreen = () => {
                 if (router.canGoBack()) {
                   router.back();
                 } else {
-                  router.replace('/(tabs)');
+                  router.replace("/(tabs)");
                 }
               }}
               style={styles.backBtn}
-              activeOpacity={0.8}
-            >
-              <AntDesign name="arrowleft" size={20} color="#333" />
+              activeOpacity={0.8}>
+              <AntDesign
+                name="arrowleft"
+                size={20}
+                color="#333"
+              />
             </TouchableOpacity>
           ),
         }}
@@ -171,17 +170,19 @@ const LoginScreen = () => {
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+        behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
+          keyboardShouldPersistTaps="handled">
           {/* Brand Header */}
           <View style={styles.brandHeader}>
             <View style={styles.brandIconCircle}>
-              <Ionicons name="cart" size={32} color={Colors.primary} />
+              <Ionicons
+                name="cart"
+                size={32}
+                color={Colors.primary}
+              />
             </View>
             <Text style={styles.brandTitle}>WAGON</Text>
             <Text style={styles.brandSubtitle}>Shop Curated Styles & Daily Essentials</Text>
@@ -195,7 +196,12 @@ const LoginScreen = () => {
             {/* Error Banner */}
             {errorMessage ? (
               <View style={styles.errorBanner}>
-                <Ionicons name="alert-circle" size={18} color="#dc2626" style={{ marginRight: 6 }} />
+                <Ionicons
+                  name="alert-circle"
+                  size={18}
+                  color="#dc2626"
+                  style={{ marginRight: 6 }}
+                />
                 <Text style={styles.errorBannerText}>{errorMessage}</Text>
               </View>
             ) : null}
@@ -203,11 +209,11 @@ const LoginScreen = () => {
             {/* Email Field */}
             <View style={styles.fieldGroup}>
               <Text style={styles.inputLabel}>Email Address</Text>
-              <View style={[styles.inputContainer, focusedInput === 'email' && styles.inputFocused]}>
+              <View style={[styles.inputContainer, focusedInput === "email" && styles.inputFocused]}>
                 <Ionicons
                   name="mail-outline"
                   size={20}
-                  color={focusedInput === 'email' ? Colors.primary : '#9ca3af'}
+                  color={focusedInput === "email" ? Colors.primary : "#9ca3af"}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -222,12 +228,16 @@ const LoginScreen = () => {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   autoCorrect={false}
-                  onFocus={() => setFocusedInput('email')}
+                  onFocus={() => setFocusedInput("email")}
                   onBlur={() => setFocusedInput(null)}
                 />
                 {email.length > 0 && (
-                  <TouchableOpacity onPress={() => setEmail('')}>
-                    <Ionicons name="close-circle" size={18} color="#9ca3af" />
+                  <TouchableOpacity onPress={() => setEmail("")}>
+                    <Ionicons
+                      name="close-circle"
+                      size={18}
+                      color="#9ca3af"
+                    />
                   </TouchableOpacity>
                 )}
               </View>
@@ -242,16 +252,15 @@ const LoginScreen = () => {
                     setForgotEmail(email);
                     setForgotModalVisible(true);
                   }}
-                  activeOpacity={0.7}
-                >
+                  activeOpacity={0.7}>
                   <Text style={styles.forgotBtnText}>Forgot password?</Text>
                 </TouchableOpacity>
               </View>
-              <View style={[styles.inputContainer, focusedInput === 'password' && styles.inputFocused]}>
+              <View style={[styles.inputContainer, focusedInput === "password" && styles.inputFocused]}>
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color={focusedInput === 'password' ? Colors.primary : '#9ca3af'}
+                  color={focusedInput === "password" ? Colors.primary : "#9ca3af"}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -265,12 +274,14 @@ const LoginScreen = () => {
                   }}
                   secureTextEntry={!isPasswordVisible}
                   autoCapitalize="none"
-                  onFocus={() => setFocusedInput('password')}
+                  onFocus={() => setFocusedInput("password")}
                   onBlur={() => setFocusedInput(null)}
                 />
-                <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)} activeOpacity={0.7}>
+                <TouchableOpacity
+                  onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                  activeOpacity={0.7}>
                   <Ionicons
-                    name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                    name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
                     size={20}
                     color="#6b7280"
                   />
@@ -283,17 +294,25 @@ const LoginScreen = () => {
               onPress={onPressLogin}
               style={[styles.loginButton, loading && styles.loginButtonDisabled]}
               disabled={loading}
-              activeOpacity={0.88}
-            >
+              activeOpacity={0.88}>
               {loading ? (
                 <View style={styles.btnRow}>
-                  <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
+                  <ActivityIndicator
+                    size="small"
+                    color="#fff"
+                    style={{ marginRight: 8 }}
+                  />
                   <Text style={styles.loginButtonText}>Signing In...</Text>
                 </View>
               ) : (
                 <View style={styles.btnRow}>
                   <Text style={styles.loginButtonText}>Sign In</Text>
-                  <Feather name="arrow-right" size={18} color="#fff" style={{ marginLeft: 6 }} />
+                  <Feather
+                    name="arrow-right"
+                    size={18}
+                    color="#fff"
+                    style={{ marginLeft: 6 }}
+                  />
                 </View>
               )}
             </TouchableOpacity>
@@ -302,9 +321,13 @@ const LoginScreen = () => {
             <View style={styles.signupPrompt}>
               <Text style={styles.signupPromptText}>Don't have an account?</Text>
               <TouchableOpacity
-                onPress={() => router.push({ pathname: '/SignupScreen', params: params.redirect ? { redirect: params.redirect } : {} })}
-                activeOpacity={0.7}
-              >
+                onPress={() =>
+                  router.push({
+                    pathname: "/SignupScreen",
+                    params: params.redirect ? { redirect: params.redirect } : {},
+                  })
+                }
+                activeOpacity={0.7}>
                 <Text style={styles.signupLink}> Create Account</Text>
               </TouchableOpacity>
             </View>
@@ -313,11 +336,18 @@ const LoginScreen = () => {
       </KeyboardAvoidingView>
 
       {/* Forgot Password Modal */}
-      <Modal visible={forgotModalVisible} transparent animationType="fade">
+      <Modal
+        visible={forgotModalVisible}
+        transparent
+        animationType="fade">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <View style={styles.modalIconCircle}>
-              <Ionicons name="key-outline" size={28} color={Colors.primary} />
+              <Ionicons
+                name="key-outline"
+                size={28}
+                color={Colors.primary}
+              />
             </View>
             <Text style={styles.modalTitle}>Reset Password</Text>
             <Text style={styles.modalSubtitle}>
@@ -325,7 +355,12 @@ const LoginScreen = () => {
             </Text>
 
             <View style={styles.modalInputWrap}>
-              <Ionicons name="mail-outline" size={18} color="#9ca3af" style={{ marginRight: 8 }} />
+              <Ionicons
+                name="mail-outline"
+                size={18}
+                color="#9ca3af"
+                style={{ marginRight: 8 }}
+              />
               <TextInput
                 style={styles.modalInput}
                 placeholder="name@example.com"
@@ -341,18 +376,19 @@ const LoginScreen = () => {
               <TouchableOpacity
                 style={styles.modalCancelBtn}
                 onPress={() => setForgotModalVisible(false)}
-                disabled={forgotLoading}
-              >
+                disabled={forgotLoading}>
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.modalSendBtn, forgotLoading && { opacity: 0.7 }]}
                 onPress={handleForgotPassword}
-                disabled={forgotLoading}
-              >
+                disabled={forgotLoading}>
                 {forgotLoading ? (
-                  <ActivityIndicator size="small" color="#fff" />
+                  <ActivityIndicator
+                    size="small"
+                    color="#fff"
+                  />
                 ) : (
                   <Text style={styles.modalSendText}>Send Link</Text>
                 )}
@@ -370,8 +406,8 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -381,91 +417,91 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 20,
     paddingTop: 80,
     paddingBottom: 40,
   },
   backBtn: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     width: 36,
     height: 36,
     borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginLeft: 10,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
   brandHeader: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
   },
   brandIconCircle: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 10,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   brandTitle: {
-    fontWeight: '900',
+    fontWeight: "900",
     fontSize: 32,
     letterSpacing: 6,
-    color: '#ffffff',
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    color: "#ffffff",
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.4)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   brandSubtitle: {
     fontSize: 13,
-    color: '#f3ece7',
+    color: "#f3ece7",
     marginTop: 4,
-    fontWeight: '500',
-    textAlign: 'center',
+    fontWeight: "500",
+    textAlign: "center",
   },
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderRadius: 24,
     paddingHorizontal: 22,
     paddingVertical: 28,
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
+    borderColor: "rgba(255, 255, 255, 0.8)",
   },
   cardTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.title,
-    textAlign: 'center',
+    textAlign: "center",
   },
   cardSubtitle: {
     fontSize: 13,
     color: Colors.subtitle,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 4,
     marginBottom: 20,
   },
   errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fef2f2',
-    borderColor: '#fecaca',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca",
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -475,42 +511,42 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 12,
-    color: '#b91c1c',
-    fontWeight: '500',
+    color: "#b91c1c",
+    fontWeight: "500",
   },
   fieldGroup: {
     marginBottom: 16,
   },
   labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 6,
   },
   inputLabel: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#374151',
+    fontWeight: "600",
+    color: "#374151",
     marginBottom: 6,
   },
   forgotBtnText: {
     fontSize: 12,
     color: Colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9fafb',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
     borderWidth: 1.5,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 50,
   },
   inputFocused: {
     borderColor: Colors.primary,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   inputIcon: {
     marginRight: 10,
@@ -518,15 +554,15 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 14,
-    color: '#111827',
-    height: '100%',
+    color: "#111827",
+    height: "100%",
   },
   loginButton: {
     backgroundColor: Colors.primary,
     borderRadius: 14,
     height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 8,
     marginBottom: 18,
     elevation: 3,
@@ -539,46 +575,46 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   btnRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   loginButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     letterSpacing: 0.3,
   },
   signupPrompt: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     paddingTop: 6,
   },
   signupPromptText: {
     fontSize: 13,
-    color: '#6b7280',
+    color: "#6b7280",
   },
   signupLink: {
     fontSize: 13,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.primary,
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 24,
   },
   modalCard: {
-    width: '100%',
-    backgroundColor: '#fff',
+    width: "100%",
+    backgroundColor: "#fff",
     borderRadius: 20,
     padding: 24,
-    alignItems: 'center',
+    alignItems: "center",
     elevation: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -587,31 +623,31 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#f3ece7',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#f3ece7",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 12,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.title,
     marginBottom: 6,
   },
   modalSubtitle: {
     fontSize: 13,
     color: Colors.subtitle,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 18,
     marginBottom: 18,
   },
   modalInputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    backgroundColor: '#f9fafb',
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    backgroundColor: "#f9fafb",
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 46,
@@ -620,35 +656,35 @@ const styles = StyleSheet.create({
   modalInput: {
     flex: 1,
     fontSize: 14,
-    color: '#111827',
+    color: "#111827",
   },
   modalBtnRow: {
-    flexDirection: 'row',
-    width: '100%',
+    flexDirection: "row",
+    width: "100%",
     gap: 10,
   },
   modalCancelBtn: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center',
+    backgroundColor: "#f3f4f6",
+    alignItems: "center",
   },
   modalCancelText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#4b5563',
+    fontWeight: "600",
+    color: "#4b5563",
   },
   modalSendBtn: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 10,
     backgroundColor: Colors.primary,
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalSendText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
 });

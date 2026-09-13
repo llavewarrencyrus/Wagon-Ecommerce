@@ -9,7 +9,6 @@ import {
   Image,
   RefreshControl,
   Alert,
-  Dimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
@@ -17,8 +16,7 @@ import { getBuyerOrders, cancelBuyerOrder } from '@/data/data';
 import { BuyerOrder, OrderStatus } from '@/types/types';
 import { Colors } from '@/constants/Colors';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/vector-icons';
-
-const { width } = Dimensions.get('window');
+import { SCREEN_WIDTH as width } from '@/constants/Layout';
 
 type TabKey = 'all' | OrderStatus;
 
