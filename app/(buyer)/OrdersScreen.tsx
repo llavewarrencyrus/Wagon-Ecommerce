@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Image,
   RefreshControl,
-  Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
@@ -16,6 +15,7 @@ import { getBuyerOrders, cancelBuyerOrder } from "@/data/data";
 import { BuyerOrder, OrderStatus } from "@/types/types";
 import { Colors } from "@/constants/Colors";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from "@expo/vector-icons";
+import CustomAlertModal, { ModalButton } from "@/components/common/CustomAlertModal";
 
 type TabKey = "all" | OrderStatus;
 
@@ -40,13 +40,22 @@ export default function OrdersScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
+  // Modal states
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
+
   const fetchOrders = useCallback(
     async (isRefresh = false) => {
       if (!userId) {
         setLoading(false);
         return;
       }
-
       if (!isRefresh) setLoading(true);
       const data = await getBuyerOrders(userId, selectedTab);
       setOrders(data as BuyerOrder[]);
@@ -66,27 +75,34 @@ export default function OrdersScreen() {
   };
 
   const handleCancelOrder = (orderId: string) => {
-    Alert.alert("Cancel Order", "Are you sure you want to cancel this order? This action cannot be undone.", [
-      { text: "Keep Order", style: "cancel" },
-      {
-        text: "Yes, Cancel",
-        style: "destructive",
-        onPress: async () => {
-          setCancellingId(orderId);
-          try {
-            await cancelBuyerOrder(orderId);
-            setOrders((prev) =>
-              prev.map((ord) => (ord.id === orderId ? { ...ord, status: "cancelled" as OrderStatus } : ord))
-            );
-            Alert.alert("Order Cancelled", "Your order has been cancelled.");
-          } catch (err: any) {
-            Alert.alert("Error", err.message || "Could not cancel order.");
-          } finally {
-            setCancellingId(null);
-          }
-        },
-      },
-    ]);
+    setOrderToCancel(orderId);
+    setIsCancelModalVisible(true);
+  };
+
+  const confirmCancelOrder = async () => {
+    if (!orderToCancel) return;
+    const orderId = orderToCancel;
+    setIsCancelModalVisible(false);
+    setCancellingId(orderId);
+    try {
+      await cancelBuyerOrder(orderId);
+      setOrders((prev) =>
+        prev.map((ord) => (ord.id === orderId ? { ...ord, status: "cancelled" as OrderStatus } : ord))
+      );
+      setAlertModal({
+        visible: true,
+        title: "Order Cancelled",
+        message: "Your order has been cancelled.",
+      });
+    } catch (err: any) {
+      setAlertModal({
+        visible: true,
+        title: "Error",
+        message: err.message || "Could not cancel order.",
+      });
+    } finally {
+      setCancellingId(null);
+    }
   };
 
   const getStatusBadge = (status: OrderStatus) => {
@@ -319,6 +335,31 @@ export default function OrdersScreen() {
           }
         />
       )}
+
+      {/* Cancel Order Confirmation Modal */}
+      <CustomAlertModal
+        visible={isCancelModalVisible}
+        title="Cancel Order"
+        message="Are you sure you want to cancel this order? This action cannot be undone."
+        buttons={[
+          { text: "Keep Order", style: "cancel" },
+          {
+            text: "Yes, Cancel",
+            style: "destructive",
+            onPress: confirmCancelOrder,
+          },
+        ]}
+        onClose={() => setIsCancelModalVisible(false)}
+      />
+
+      {/* Action Feedback Modal */}
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 }

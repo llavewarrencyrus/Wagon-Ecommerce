@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   Text,
-  Alert,
   ActivityIndicator,
   Image,
   ScrollView,
@@ -21,6 +20,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/Colors';
 import Loading from '@/components/Loading';
+import CustomAlertModal, { ModalButton } from '@/components/common/CustomAlertModal';
 
 interface UserProfile {
   id: string;
@@ -42,6 +42,12 @@ const EditProfileScreen: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: '', message: '' });
 
   useEffect(() => {
     fetchProfile();
@@ -71,7 +77,11 @@ const EditProfileScreen: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Error fetching user profile:', err);
-      Alert.alert('Error', 'Unable to load profile data.');
+      setAlertModal({
+        visible: true,
+        title: 'Error',
+        message: 'Unable to load profile data.',
+      });
     } finally {
       setLoading(false);
     }
@@ -81,7 +91,11 @@ const EditProfileScreen: React.FC = () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow gallery access to upload a profile picture.');
+        setAlertModal({
+          visible: true,
+          title: 'Permission Required',
+          message: 'Please allow gallery access to upload a profile picture.',
+        });
         return;
       }
 
@@ -100,7 +114,11 @@ const EditProfileScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to select image.');
+      setAlertModal({
+        visible: true,
+        title: 'Error',
+        message: 'Failed to select image.',
+      });
     }
   };
 
@@ -108,11 +126,19 @@ const EditProfileScreen: React.FC = () => {
     // Validate username
     const trimmedUsername = username.trim();
     if (!trimmedUsername) {
-      Alert.alert('Validation Error', 'Please enter a username.');
+      setAlertModal({
+        visible: true,
+        title: 'Validation Error',
+        message: 'Please enter a username.',
+      });
       return;
     }
     if (trimmedUsername.length < 3) {
-      Alert.alert('Validation Error', 'Username must be at least 3 characters long.');
+      setAlertModal({
+        visible: true,
+        title: 'Validation Error',
+        message: 'Username must be at least 3 characters long.',
+      });
       return;
     }
 
@@ -164,12 +190,21 @@ const EditProfileScreen: React.FC = () => {
       // Refresh global Auth state
       await refreshUserProfile();
 
-      Alert.alert('Profile Updated', 'Your profile details have been saved successfully.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      setAlertModal({
+        visible: true,
+        title: 'Profile Updated',
+        message: 'Your profile details have been saved successfully.',
+        buttons: [
+          { text: 'OK', onPress: () => router.back() },
+        ],
+      });
     } catch (err: any) {
       console.error('Error updating profile:', err);
-      Alert.alert('Save Failed', err.message || 'Could not update profile. Please try again.');
+      setAlertModal({
+        visible: true,
+        title: 'Save Failed',
+        message: err.message || 'Could not update profile. Please try again.',
+      });
     } finally {
       setSaving(false);
     }
@@ -303,6 +338,15 @@ const EditProfileScreen: React.FC = () => {
           <Text style={styles.securityButtonText}>Change Password</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Action Feedback Modal */}
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </KeyboardAvoidingView>
   );
 };

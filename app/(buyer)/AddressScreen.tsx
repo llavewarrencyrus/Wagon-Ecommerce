@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Dimensions, RefreshControl } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions, RefreshControl } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -9,6 +9,7 @@ import { AddressProps } from "@/types/types";
 import { getAddresses, setDefaultAddress, deleteAddress } from "@/data/data";
 import { Colors } from "@/constants/Colors";
 import Loading from "@/components/Loading";
+import CustomAlertModal, { ModalButton } from "@/components/common/CustomAlertModal";
 
 const AddressScreen: React.FC = () => {
   const router = useRouter();
@@ -19,6 +20,16 @@ const AddressScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+
+  // Modal states
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState<AddressProps | null>(null);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
 
   const fetchAddresses = useCallback(async () => {
     if (!userId) {
@@ -58,7 +69,11 @@ const AddressScreen: React.FC = () => {
     if (!success) {
       // Revert if failed
       setAddresses(previous);
-      Alert.alert("Error", "Failed to update default address. Please try again.");
+      setAlertModal({
+        visible: true,
+        title: "Error",
+        message: "Failed to update default address. Please try again.",
+      });
     }
   };
 
@@ -69,32 +84,39 @@ const AddressScreen: React.FC = () => {
 
   const handleDelete = (address: AddressProps) => {
     if (!address.id) return;
+    setAddressToDelete(address);
+    setIsDeleteModalVisible(true);
+  };
 
-    Alert.alert("Delete Address", `Are you sure you want to remove the address for "${address.name}"?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          setActionLoadingId(address.id!);
-          const success = await deleteAddress(address.id!);
-          setActionLoadingId(null);
+  const confirmDeleteAddress = async () => {
+    if (!addressToDelete || !addressToDelete.id) return;
+    const address = addressToDelete;
+    setIsDeleteModalVisible(false);
 
-          if (success) {
-            const remaining = addresses.filter((a) => a.id !== address.id);
-            // If deleted address was the default and others remain, set first as default
-            if (address.prefer && remaining.length > 0 && userId && remaining[0].id) {
-              remaining[0].prefer = true;
-              await setDefaultAddress(userId, remaining[0].id);
-            }
-            setAddresses(remaining);
-            Alert.alert("Success", "Address deleted successfully.");
-          } else {
-            Alert.alert("Error", "Failed to delete address. Please try again.");
-          }
-        },
-      },
-    ]);
+    setActionLoadingId(address.id!);
+    const success = await deleteAddress(address.id!);
+    setActionLoadingId(null);
+
+    if (success) {
+      const remaining = addresses.filter((a) => a.id !== address.id);
+      // If deleted address was the default and others remain, set first as default
+      if (address.prefer && remaining.length > 0 && userId && remaining[0].id) {
+        remaining[0].prefer = true;
+        await setDefaultAddress(userId, remaining[0].id);
+      }
+      setAddresses(remaining);
+      setAlertModal({
+        visible: true,
+        title: "Success",
+        message: "Address deleted successfully.",
+      });
+    } else {
+      setAlertModal({
+        visible: true,
+        title: "Error",
+        message: "Failed to delete address. Please try again.",
+      });
+    }
   };
 
   const renderItem = ({ item }: { item: AddressProps }) => {
@@ -259,6 +281,35 @@ const AddressScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Delete Address Confirmation Modal */}
+      <CustomAlertModal
+        visible={isDeleteModalVisible}
+        title="Delete Address"
+        message={
+          addressToDelete
+            ? `Are you sure you want to remove the address for "${addressToDelete.name}"?`
+            : ""
+        }
+        buttons={[
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: confirmDeleteAddress,
+          },
+        ]}
+        onClose={() => setIsDeleteModalVisible(false)}
+      />
+
+      {/* Action Feedback Modal */}
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 };

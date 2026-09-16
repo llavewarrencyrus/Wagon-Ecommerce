@@ -4,7 +4,6 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   StyleSheet,
   Image,
@@ -20,6 +19,7 @@ import { AddressProps, CartItemProps } from "@/types/types";
 import { getAddresses, removeFromCart } from "@/data/data";
 import { Colors } from "@/constants/Colors";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
+import CustomAlertModal, { ModalButton } from "@/components/common/CustomAlertModal";
 
 const calculateTotalAmount = (items: CartItemProps[]): number => {
   let total = 0;
@@ -50,6 +50,12 @@ const CheckOutScreen = () => {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "gcash" | "card">("cod");
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
 
   const subtotal = calculateTotalAmount(selectedPurchase);
   const shippingFee = subtotal > 1500 ? 0 : 50;
@@ -89,13 +95,26 @@ const CheckOutScreen = () => {
 
   const handleCheckout = async () => {
     if (!selectedAddressId) {
-      Alert.alert("Delivery Address Required", "Please select or add a delivery address before placing your order.");
+      setAlertModal({
+        visible: true,
+        title: "Delivery Address Required",
+        message: "Please select or add a delivery address before placing your order.",
+      });
       return;
     }
 
     if (!selectedPurchase || selectedPurchase.length === 0) {
-      Alert.alert("No Items", "There are no items to checkout.");
-      router.back();
+      setAlertModal({
+        visible: true,
+        title: "No Items",
+        message: "There are no items to checkout.",
+        buttons: [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ],
+      });
       return;
     }
 
@@ -121,7 +140,11 @@ const CheckOutScreen = () => {
       const { error } = await supabase.from("orders").insert(orderData);
 
       if (error) {
-        Alert.alert("Checkout Failed", error.message || "Something went wrong while processing your order.");
+        setAlertModal({
+          visible: true,
+          title: "Checkout Failed",
+          message: error.message || "Something went wrong while processing your order.",
+        });
         console.error("Order error:", error.message);
       } else {
         // Automatically remove checked-out items from the user's cart
@@ -133,10 +156,11 @@ const CheckOutScreen = () => {
         setCartItems((prev) => prev.filter((c) => !selectedPurchase.some((p) => p.cart_id === c.cart_id)));
         setSelectedPurchase([]);
 
-        Alert.alert(
-          "Order Placed! 🎉",
-          "Your order has been placed successfully. You can track it in your Account orders.",
-          [
+        setAlertModal({
+          visible: true,
+          title: "Order Placed! 🎉",
+          message: "Your order has been placed successfully. You can track it in your Account orders.",
+          buttons: [
             {
               text: "View Orders",
               onPress: () => router.replace("/Account"),
@@ -145,12 +169,16 @@ const CheckOutScreen = () => {
               text: "Continue Shopping",
               onPress: () => router.replace("/(tabs)"),
             },
-          ]
-        );
+          ],
+        });
       }
     } catch (err: any) {
       console.error("Unexpected error during checkout:", err);
-      Alert.alert("Error", "An unexpected error occurred. Please try again.");
+      setAlertModal({
+        visible: true,
+        title: "Error",
+        message: "An unexpected error occurred. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -377,6 +405,15 @@ const CheckOutScreen = () => {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Action Feedback Modal */}
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 };

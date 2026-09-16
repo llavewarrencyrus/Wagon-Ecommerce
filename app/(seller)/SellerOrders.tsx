@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   Modal,
   TextInput,
   Image,
@@ -20,6 +19,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getSellerOrders, updateOrderStatus } from '@/data/data';
 import { SellerOrder, OrderStatus } from '@/types/types';
 import { Colors } from '@/constants/Colors';
+import CustomAlertModal, { ModalButton } from '@/components/common/CustomAlertModal';
 
 const STATUS_TABS: { label: string; key: 'all' | OrderStatus }[] = [
   { label: 'All', key: 'all' },
@@ -46,6 +46,21 @@ export default function SellerOrders() {
   const [shippingNotes, setShippingNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Custom Alert & Confirmation Modal states
+  const [confirmModal, setConfirmModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+  }>({ visible: false, title: '', message: '', buttons: [] });
+
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: '', message: '' });
+
   useEffect(() => {
     fetchOrders();
   }, [user, selectedStatus]);
@@ -58,7 +73,11 @@ export default function SellerOrders() {
       setOrders(data as SellerOrder[]);
     } catch (err) {
       console.error('Error loading seller orders:', err);
-      Alert.alert('Error', 'Failed to load orders.');
+      setAlertModal({
+        visible: true,
+        title: 'Error',
+        message: 'Failed to load orders.',
+      });
     } finally {
       setLoading(false);
     }
@@ -70,26 +89,35 @@ export default function SellerOrders() {
     setRefreshing(false);
   };
 
-  const handleConfirmPack = async (order: SellerOrder) => {
-    Alert.alert(
-      'Confirm Packing',
-      `Move Order #${order.id.slice(0, 8)} to "Processing / Packing"?`,
-      [
+  const handleConfirmPack = (order: SellerOrder) => {
+    setConfirmModal({
+      visible: true,
+      title: 'Confirm Packing',
+      message: `Move Order #${order.id.slice(0, 8)} to "Processing / Packing"?`,
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Confirm',
           onPress: async () => {
             try {
               await updateOrderStatus(order.id, 'processing');
-              Alert.alert('Success', 'Order marked as Processing / Packing.');
+              setAlertModal({
+                visible: true,
+                title: 'Success',
+                message: 'Order marked as Processing / Packing.',
+              });
               fetchOrders();
             } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to update order.');
+              setAlertModal({
+                visible: true,
+                title: 'Error',
+                message: err.message || 'Failed to update order.',
+              });
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleOpenShipModal = (order: SellerOrder) => {
@@ -103,7 +131,11 @@ export default function SellerOrders() {
   const handleConfirmShip = async () => {
     if (!selectedOrder) return;
     if (!trackingNumber.trim()) {
-      Alert.alert('Validation', 'Please enter a tracking number.');
+      setAlertModal({
+        visible: true,
+        title: 'Validation',
+        message: 'Please enter a tracking number.',
+      });
       return;
     }
 
@@ -116,43 +148,61 @@ export default function SellerOrders() {
         courier.trim(),
         shippingNotes.trim()
       );
-      Alert.alert('Order Shipped', 'Order marked as In Transit with courier tracking.');
+      setAlertModal({
+        visible: true,
+        title: 'Order Shipped',
+        message: 'Order marked as In Transit with courier tracking.',
+      });
       setModalVisible(false);
       fetchOrders();
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to ship order.');
+      setAlertModal({
+        visible: true,
+        title: 'Error',
+        message: err.message || 'Failed to ship order.',
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleMarkDelivered = async (order: SellerOrder) => {
-    Alert.alert(
-      'Complete Delivery',
-      'Confirm that this order has been received by the customer?',
-      [
+  const handleMarkDelivered = (order: SellerOrder) => {
+    setConfirmModal({
+      visible: true,
+      title: 'Complete Delivery',
+      message: 'Confirm that this order has been received by the customer?',
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delivered',
           onPress: async () => {
             try {
               await updateOrderStatus(order.id, 'delivered');
-              Alert.alert('Success', 'Order marked as Delivered.');
+              setAlertModal({
+                visible: true,
+                title: 'Success',
+                message: 'Order marked as Delivered.',
+              });
               fetchOrders();
             } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to complete order.');
+              setAlertModal({
+                visible: true,
+                title: 'Error',
+                message: err.message || 'Failed to complete order.',
+              });
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
-  const handleCancelOrder = async (order: SellerOrder) => {
-    Alert.alert(
-      'Cancel Order',
-      'Are you sure you want to cancel this order? This action cannot be undone.',
-      [
+  const handleCancelOrder = (order: SellerOrder) => {
+    setConfirmModal({
+      visible: true,
+      title: 'Cancel Order',
+      message: 'Are you sure you want to cancel this order? This action cannot be undone.',
+      buttons: [
         { text: 'No', style: 'cancel' },
         {
           text: 'Yes, Cancel',
@@ -160,15 +210,23 @@ export default function SellerOrders() {
           onPress: async () => {
             try {
               await updateOrderStatus(order.id, 'cancelled');
-              Alert.alert('Order Cancelled', 'The order has been cancelled.');
+              setAlertModal({
+                visible: true,
+                title: 'Order Cancelled',
+                message: 'The order has been cancelled.',
+              });
               fetchOrders();
             } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to cancel order.');
+              setAlertModal({
+                visible: true,
+                title: 'Error',
+                message: err.message || 'Failed to cancel order.',
+              });
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleChatWithBuyer = (buyerId?: string) => {
@@ -473,6 +531,24 @@ export default function SellerOrders() {
           </View>
         </View>
       </Modal>
+
+      {/* Confirmation Modal */}
+      <CustomAlertModal
+        visible={confirmModal.visible}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        buttons={confirmModal.buttons}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, visible: false }))}
+      />
+
+      {/* Action Feedback Modal */}
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

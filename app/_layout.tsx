@@ -259,7 +259,7 @@ export default function RootLayout() {
                   <Stack.Screen name="(buyer)/Category" />
                   <Stack.Screen
                     name="(buyer)/Cart"
-                    options={{ headerShadowVisible: false }}
+                    options={{ headerShadowVisible: false, headerTitle: "Cart" }}
                   />
                   <Stack.Screen name="(buyer)/Account" />
                   <Stack.Screen
@@ -331,7 +331,7 @@ export default function RootLayout() {
                   <Stack.Screen
                     name="(buyer)/EditProfileScreen"
                     options={{
-                      title: "Edit Profile",
+                      headerTitle: "Edit Profile",
                       headerShadowVisible: false,
                     }}
                   />
@@ -386,19 +386,19 @@ export default function RootLayout() {
                   <Stack.Screen name="(buyer)/HelpCenter" />
                   <Stack.Screen
                     name="(buyer)/CheckOutScreen"
-                    options={{ title: "Checkout" }}
+                    options={{ headerTitle: "Checkout" }}
                   />
                   <Stack.Screen
                     name="(buyer)/OrdersScreen"
-                    options={{ title: "My Orders" }}
+                    options={{ headerTitle: "My Orders" }}
                   />
                   <Stack.Screen
                     name="(buyer)/AddressScreen"
-                    options={{ title: "My Addresses" }}
+                    options={{ headerTitle: "My Addresses" }}
                   />
                   <Stack.Screen
                     name="(buyer)/AddEditAddress"
-                    options={{ title: "Address Details" }}
+                    options={{ headerTitle: "Address Details" }}
                   />
 
                   {/* Seller Screens */}
@@ -412,11 +412,11 @@ export default function RootLayout() {
                   />
                   <Stack.Screen
                     name="(seller)/AddProduct"
-                    options={{ title: "Add New Product" }}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="(seller)/UpdateProduct"
-                    options={{ title: "Edit Product" }}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="(seller)/EditStoreScreen"
@@ -427,7 +427,7 @@ export default function RootLayout() {
                   <Stack.Screen name="(shared)/Chat" />
                   <Stack.Screen
                     name="(shared)/SellerChat"
-                    options={{ title: "Customer Chat" }}
+                    options={{ headerTitle: "Customer Chat" }}
                   />
                   <Stack.Screen name="(shared)/UnderConstruction" />
                 </Stack>
