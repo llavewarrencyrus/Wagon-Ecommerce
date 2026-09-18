@@ -6,7 +6,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  Alert,
   TouchableOpacity,
   TouchableWithoutFeedback,
   Image,
@@ -24,6 +23,7 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Loading from "@/components/Loading";
 import LottieView from "lottie-react-native";
 import { useWidth } from "@/context/WidthContext";
+import CustomAlertModal, { ModalButton } from "@/components/common/CustomAlertModal";
 
 const CartScreen: React.FC = () => {
   const router = useRouter();
@@ -47,6 +47,12 @@ const CartScreen: React.FC = () => {
   const [deleteItemModalVisible, setDeleteItemModalVisible] = useState(false);
   const [deleteAllModalVisible, setDeleteAllModalVisible] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
 
   useEffect(() => {
     if (!user) {
@@ -150,14 +156,22 @@ const CartScreen: React.FC = () => {
 
   const handleCheckout = async () => {
     if (selectedItems.length === 0) {
-      Alert.alert("No Items Selected", "Please select at least one item to proceed to checkout.");
+      setAlertModal({
+        visible: true,
+        title: "No Items Selected",
+        message: "Please select at least one item to proceed to checkout.",
+      });
       return;
     }
     // Re-fetch fresh cart items so that all product fields (including seller_id) are up-to-date
     const freshItems = userId ? await getCartItems(userId) : cartItems;
     const itemstoCheckout = freshItems.filter((item: CartItemProps) => selectedItems.includes(item.cart_id));
     if (itemstoCheckout.length === 0) {
-      Alert.alert("No Items Selected", "Please select at least one item to proceed to checkout.");
+      setAlertModal({
+        visible: true,
+        title: "No Items Selected",
+        message: "Please select at least one item to proceed to checkout.",
+      });
       return;
     }
     setCartItems(freshItems);
@@ -361,6 +375,14 @@ const CartScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 };

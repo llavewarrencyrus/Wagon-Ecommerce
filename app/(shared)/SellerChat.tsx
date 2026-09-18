@@ -5,12 +5,12 @@ import {
   Text,
   View,
   TextInput,
-  Alert,
   ScrollView,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import CustomAlertModal, { ModalButton } from '@/components/common/CustomAlertModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
@@ -41,6 +41,12 @@ export default function SellerChat() {
   const [partnerInfo, setPartnerInfo] = useState<User | null>(null);
   const [sending, setSending] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
 
   useEffect(() => {
     if (!isAuthenticated || !user?.id || !senderId) return;
@@ -137,7 +143,11 @@ export default function SellerChat() {
       if (error) throw error;
       fetchMessages();
     } catch (error: any) {
-      Alert.alert('Send Error', error.message || 'Could not send message.');
+      setAlertModal({
+        visible: true,
+        title: 'Send Error',
+        message: error.message || 'Could not send message.',
+      });
     } finally {
       setSending(false);
     }
@@ -218,6 +228,14 @@ export default function SellerChat() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

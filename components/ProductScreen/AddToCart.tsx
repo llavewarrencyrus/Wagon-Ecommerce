@@ -8,9 +8,9 @@ import {
   StyleSheet,
   Image,
   Dimensions,
-  Alert,
   ActivityIndicator,
 } from "react-native";
+import CustomAlertModal, { ModalButton } from "@/components/common/CustomAlertModal";
 import { useRouter } from "expo-router";
 
 import { useCart } from "@/context/CartProvider";
@@ -84,6 +84,12 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [selectVariant, setVariant] = useState<string | undefined>("");
 
   const [showLottie, setShowLottie] = useState<boolean>(false);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
 
   const colorBtn = colors.map((color) => ({
     label: color.color,
@@ -143,15 +149,28 @@ const ProductModal: React.FC<ProductModalProps> = ({
     const userId = userData?.user?.id;
 
     if (!userId) {
-      Alert.alert("Not Logged In", "Please log in first to continue shopping!");
-      router.push("/LoginScreen");
+      setAlertModal({
+        visible: true,
+        title: "Not Logged In",
+        message: "Please log in first to continue shopping!",
+        buttons: [
+          {
+            text: "OK",
+            onPress: () => router.push("/LoginScreen"),
+          },
+        ],
+      });
       return;
     }
 
     if (handleDisable()) return;
 
     if (!selectVariant || selectVariant === "selected") {
-      Alert.alert("Selection Required", "Please select a valid color and size.");
+      setAlertModal({
+        visible: true,
+        title: "Selection Required",
+        message: "Please select a valid color and size.",
+      });
       return;
     }
 
@@ -216,7 +235,11 @@ const ProductModal: React.FC<ProductModalProps> = ({
         onClose();
       }, 1800);
     } else {
-      Alert.alert("Error", "Could not add item to cart. Please try again.");
+      setAlertModal({
+        visible: true,
+        title: "Error",
+        message: "Could not add item to cart. Please try again.",
+      });
     }
   };
 
@@ -239,6 +262,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   };
 
   return (
+    <>
     <Modal
       animationType="slide"
       transparent={true}
@@ -387,6 +411,15 @@ const ProductModal: React.FC<ProductModalProps> = ({
         </View>
       ) : null}
     </Modal>
+
+    <CustomAlertModal
+      visible={alertModal.visible}
+      title={alertModal.title}
+      message={alertModal.message}
+      buttons={alertModal.buttons}
+      onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+    />
+    </>
   );
 };
 

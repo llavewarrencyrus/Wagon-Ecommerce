@@ -5,7 +5,6 @@ import {
   Text,
   View,
   FlatList,
-  Alert,
   Pressable,
   Animated,
   RefreshControl,

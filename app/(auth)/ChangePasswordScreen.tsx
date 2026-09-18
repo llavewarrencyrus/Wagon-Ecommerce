@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Modal, Dimensions, Image } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal, Dimensions, Image } from 'react-native';
+import CustomAlertModal, { ModalButton } from '@/components/common/CustomAlertModal';
 import { Fontisto, Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/Colors';
@@ -15,20 +16,38 @@ const ChangePasswordScreen = () => {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
+    const [alertModal, setAlertModal] = useState<{
+        visible: boolean;
+        title: string;
+        message: string;
+        buttons?: ModalButton[];
+    }>({ visible: false, title: "", message: "" });
 
     const router = useRouter();
 
     const validateAndShowModal = () => {
         if (!newPassword || !confirmPassword) {
-            Alert.alert('Error', 'Please fill in all fields.');
+            setAlertModal({
+                visible: true,
+                title: 'Error',
+                message: 'Please fill in all fields.',
+            });
             return;
         }
-        if (newPassword.length < 6) {
-            Alert.alert('Error', 'New password must be at least 8 characters long.');
+        if (newPassword.length < 8) {
+            setAlertModal({
+                visible: true,
+                title: 'Error',
+                message: 'New password must be at least 8 characters long.',
+            });
             return;
         }
         if (newPassword !== confirmPassword) {
-            Alert.alert('Error', 'Passwords do not match.');
+            setAlertModal({
+                visible: true,
+                title: 'Error',
+                message: 'Passwords do not match.',
+            });
             return;
         }
         setModalVisible(true);
@@ -39,16 +58,32 @@ const ChangePasswordScreen = () => {
         try {
             const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
             if (updateError) {
-                Alert.alert('Error', 'Failed to change password. Please try again later.');
+                setAlertModal({
+                    visible: true,
+                    title: 'Error',
+                    message: 'Failed to change password. Please try again later.',
+                });
                 return;
             }
-            Alert.alert('Success', 'Your password has been changed successfully.');
+            setAlertModal({
+                visible: true,
+                title: 'Success',
+                message: 'Your password has been changed successfully.',
+                buttons: [
+                    {
+                        text: 'OK',
+                        onPress: () => router.push('/Account'),
+                    },
+                ],
+            });
             setNewPassword('');
             setConfirmPassword('');
-
-            router.push('/Account');
         } catch (error) {
-            Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+            setAlertModal({
+                visible: true,
+                title: 'Error',
+                message: 'An unexpected error occurred. Please try again.',
+            });
         } finally {
             setLoading(false);
             setModalVisible(false);
@@ -109,6 +144,14 @@ const ChangePasswordScreen = () => {
                     </View>
                 </View>
             </Modal>
+
+            <CustomAlertModal
+                visible={alertModal.visible}
+                title={alertModal.title}
+                message={alertModal.message}
+                buttons={alertModal.buttons}
+                onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+            />
         </View>
     );
 };

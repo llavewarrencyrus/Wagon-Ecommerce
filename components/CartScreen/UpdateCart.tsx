@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Modal, View, Text, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, Image, Alert } from "react-native";
+import { Modal, View, Text, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, Image } from "react-native";
+import CustomAlertModal, { ModalButton } from "@/components/common/CustomAlertModal";
 import { useRouter } from "expo-router";
 
 import { useCart } from "@/context/CartProvider";
@@ -45,6 +46,12 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, variants, v
 
   const [productPrice, setProductPrice] = useState<number>();
   const [discountedPrice, setDiscountedPrice] = useState<number | null>();
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
 
   const router = useRouter();
 
@@ -134,8 +141,17 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, variants, v
     const userId = userData?.user?.id;
 
     if (!userId) {
-      Alert.alert("Not logged in", "Please log in first!");
-      router.push("/LoginScreen");
+      setAlertModal({
+        visible: true,
+        title: "Not logged in",
+        message: "Please log in first!",
+        buttons: [
+          {
+            text: "OK",
+            onPress: () => router.push("/LoginScreen"),
+          },
+        ],
+      });
       return;
     }
     if (handleDisable()) return;
@@ -153,9 +169,17 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, variants, v
           setCartItems((prevCartItems) =>
             prevCartItems.map((item) => (item.cart_id === variant.cart_id ? updatedItem : item))
           );
-          Alert.alert("Success", "Item updated in cart!");
+          setAlertModal({
+            visible: true,
+            title: "Success",
+            message: "Item updated in cart!",
+          });
         } else {
-          Alert.alert("Error", "Could not update item in cart. Please try again.");
+          setAlertModal({
+            visible: true,
+            title: "Error",
+            message: "Could not update item in cart. Please try again.",
+          });
         }
       }
     }
@@ -187,6 +211,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, variants, v
   };
 
   return (
+    <>
     <Modal
       animationType="slide"
       transparent={true}
@@ -310,6 +335,15 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ visible, onClose, variants, v
         </View>
       </TouchableWithoutFeedback>
     </Modal>
+
+    <CustomAlertModal
+      visible={alertModal.visible}
+      title={alertModal.title}
+      message={alertModal.message}
+      buttons={alertModal.buttons}
+      onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+    />
+    </>
   );
 };
 

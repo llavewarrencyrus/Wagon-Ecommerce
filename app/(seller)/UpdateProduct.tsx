@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
   StyleSheet,
   TextInput,
   ActivityIndicator,
@@ -18,6 +17,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import uuid from "react-native-uuid";
 import { getProductById } from "@/data/data";
+import CustomAlertModal, { ModalButton } from "@/components/common/CustomAlertModal";
 
 export default function UpdateProduct() {
   const router = useRouter();
@@ -27,6 +27,12 @@ export default function UpdateProduct() {
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [uploadingImage, setUploadingImage] = useState<boolean>(false);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
 
   // Form states
   const [productName, setProductName] = useState<string>("");
@@ -77,8 +83,12 @@ export default function UpdateProduct() {
     if (productId) {
       loadProductData(productId);
     } else {
-      Alert.alert("Error", "Product ID missing.");
-      router.back();
+      setAlertModal({
+        visible: true,
+        title: "Error",
+        message: "Product ID missing.",
+        buttons: [{ text: "OK", onPress: () => router.back() }],
+      });
     }
   }, [productId]);
 
@@ -97,12 +107,20 @@ export default function UpdateProduct() {
         setSelectedMaterials(Array.isArray(prod.product_material) ? prod.product_material : []);
         setVariants(Array.isArray(prod.product_variant) ? prod.product_variant : []);
       } else {
-        Alert.alert("Not Found", "Product details could not be found.");
-        router.back();
+        setAlertModal({
+          visible: true,
+          title: "Not Found",
+          message: "Product details could not be found.",
+          buttons: [{ text: "OK", onPress: () => router.back() }],
+        });
       }
     } catch (e) {
       console.error("Error fetching product to update:", e);
-      Alert.alert("Error", "Failed to fetch product details.");
+      setAlertModal({
+        visible: true,
+        title: "Error",
+        message: "Failed to fetch product details.",
+      });
     } finally {
       setInitialLoading(false);
     }
@@ -144,18 +162,30 @@ export default function UpdateProduct() {
   const handleApplyBulkStock = () => {
     const num = parseInt(bulkStock.replace(/[^0-9]/g, ""), 10);
     if (isNaN(num) || num < 0) {
-      Alert.alert("Invalid Quantity", "Please enter a valid non-negative number for bulk stock.");
+      setAlertModal({
+        visible: true,
+        title: "Invalid Quantity",
+        message: "Please enter a valid non-negative number for bulk stock.",
+      });
       return;
     }
     setVariants((prev) => prev.map((v) => ({ ...v, product_quantity: num })));
     setBulkStock("");
-    Alert.alert("Updated", `Set all variant quantities to ${num}.`);
+    setAlertModal({
+      visible: true,
+      title: "Updated",
+      message: `Set all variant quantities to ${num}.`,
+    });
   };
 
   const handleAddImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Denied", "You need to grant access to the photo library.");
+      setAlertModal({
+        visible: true,
+        title: "Permission Denied",
+        message: "You need to grant access to the photo library.",
+      });
       return;
     }
 
@@ -182,7 +212,11 @@ export default function UpdateProduct() {
             });
 
           if (error) {
-            Alert.alert("Upload Error", error.message);
+            setAlertModal({
+              visible: true,
+              title: "Upload Error",
+              message: error.message,
+            });
             return;
           }
 
@@ -191,7 +225,11 @@ export default function UpdateProduct() {
             setImageUris((prev) => [...prev, urlData.publicUrl]);
           }
         } catch (err: any) {
-          Alert.alert("Upload failed", err.message || "Error uploading image");
+          setAlertModal({
+            visible: true,
+            title: "Upload failed",
+            message: err.message || "Error uploading image",
+          });
         } finally {
           setUploadingImage(false);
         }
@@ -205,23 +243,43 @@ export default function UpdateProduct() {
 
   const handleSave = async () => {
     if (!productName.trim()) {
-      Alert.alert("Validation", "Please enter a product name.");
+      setAlertModal({
+        visible: true,
+        title: "Validation",
+        message: "Please enter a product name.",
+      });
       return;
     }
     if (!price.trim()) {
-      Alert.alert("Validation", "Please enter a product price.");
+      setAlertModal({
+        visible: true,
+        title: "Validation",
+        message: "Please enter a product price.",
+      });
       return;
     }
     if (!description.trim()) {
-      Alert.alert("Validation", "Please enter a product description.");
+      setAlertModal({
+        visible: true,
+        title: "Validation",
+        message: "Please enter a product description.",
+      });
       return;
     }
     if (imageUris.length === 0) {
-      Alert.alert("Validation", "Please include at least one product photo.");
+      setAlertModal({
+        visible: true,
+        title: "Validation",
+        message: "Please include at least one product photo.",
+      });
       return;
     }
     if (selectedCategories.length === 0) {
-      Alert.alert("Validation", "Please select at least one product category.");
+      setAlertModal({
+        visible: true,
+        title: "Validation",
+        message: "Please select at least one product category.",
+      });
       return;
     }
 
@@ -229,11 +287,19 @@ export default function UpdateProduct() {
     const discountNum = parseInt(discount.replace(/[^0-9]/g, ""), 10) || 0;
 
     if (isNaN(priceNum) || priceNum <= 0) {
-      Alert.alert("Invalid Price", "Please enter a valid price greater than $0.");
+      setAlertModal({
+        visible: true,
+        title: "Invalid Price",
+        message: "Please enter a valid price greater than $0.",
+      });
       return;
     }
     if (discountNum < 0 || discountNum > 99) {
-      Alert.alert("Invalid Discount", "Discount must be between 0% and 99%.");
+      setAlertModal({
+        visible: true,
+        title: "Invalid Discount",
+        message: "Discount must be between 0% and 99%.",
+      });
       return;
     }
 
@@ -272,11 +338,24 @@ export default function UpdateProduct() {
         await Promise.all(updatePromises);
       }
 
-      Alert.alert("Success", "Product updated successfully!");
-      router.back();
+      setAlertModal({
+        visible: true,
+        title: "Success",
+        message: "Product updated successfully!",
+        buttons: [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ],
+      });
     } catch (err: any) {
       console.error("Error updating product:", err);
-      Alert.alert("Update Failed", err.message || "Could not update product.");
+      setAlertModal({
+        visible: true,
+        title: "Update Failed",
+        message: err.message || "Could not update product.",
+      });
     } finally {
       setSaving(false);
     }
@@ -654,6 +733,15 @@ export default function UpdateProduct() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Action Feedback Modal */}
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

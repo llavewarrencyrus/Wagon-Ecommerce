@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Alert,
   Modal,
   ActivityIndicator,
 } from 'react-native';
@@ -15,12 +14,19 @@ import { useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons, SimpleLineIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/Colors';
+import CustomAlertModal, { ModalButton } from '@/components/common/CustomAlertModal';
 
 export default function SellerAccount() {
   const router = useRouter();
   const { user, storeProfile, logout, toggleMode } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: '', message: '' });
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -30,7 +36,11 @@ export default function SellerAccount() {
       router.replace('/(tabs)');
     } catch (error) {
       console.error('Logout Error:', error);
-      Alert.alert('Logout Error', 'There was a problem logging out.');
+      setAlertModal({
+        visible: true,
+        title: 'Logout Error',
+        message: 'There was a problem logging out.',
+      });
     } finally {
       setLoggingOut(false);
     }
@@ -187,6 +197,15 @@ export default function SellerAccount() {
           </View>
         </View>
       </Modal>
+
+      {/* Action Feedback Modal */}
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

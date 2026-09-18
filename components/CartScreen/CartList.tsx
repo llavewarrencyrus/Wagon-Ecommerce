@@ -8,8 +8,8 @@ import {
   Image,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Alert
 } from 'react-native';
+import CustomAlertModal, { ModalButton } from '@/components/common/CustomAlertModal';
 import { FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { CartItemProps, Variant } from '@/types/types';
@@ -35,6 +35,12 @@ const CartItem: React.FC<CartItem> = ({
   handleUpdateCart,
 }) => {
   const [variant, setVariant] = useState<Variant[] | null | undefined>();
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
   useEffect(() => {
     if (item && item.product_variant && item.product_variant.product_id) {
       const fetchVariant = async () => {
@@ -43,11 +49,19 @@ const CartItem: React.FC<CartItem> = ({
           if (fetchedProduct) {
             setVariant(fetchedProduct);
           } else {
-            Alert.alert('Error', 'Product Not Found');
+            setAlertModal({
+              visible: true,
+              title: 'Error',
+              message: 'Product Not Found',
+            });
           }
         } catch (error) {
           console.error("Error fetching product:", error);
-          Alert.alert('Error', 'Could not fetch product. Please try again.');
+          setAlertModal({
+            visible: true,
+            title: 'Error',
+            message: 'Could not fetch product. Please try again.',
+          });
         }
       };
       fetchVariant();
@@ -127,6 +141,14 @@ const CartItem: React.FC<CartItem> = ({
           </View>
         </View>
       </View>
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 };

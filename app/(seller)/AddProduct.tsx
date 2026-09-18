@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
   StyleSheet,
   TextInput,
   ActivityIndicator,
@@ -18,6 +17,7 @@ import { useRouter } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import uuid from "react-native-uuid";
 import { useAuth } from "@/context/AuthContext";
+import CustomAlertModal, { ModalButton } from "@/components/common/CustomAlertModal";
 
 interface CompleteColor {
   id: string;
@@ -52,6 +52,12 @@ export default function AddProduct() {
   // Step state
   const [step, setStep] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
 
   // Step 1: Product Basics
   const [nameState, setNameState] = useState<string>("");
@@ -216,7 +222,11 @@ export default function AddProduct() {
   const handleSelectProductImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Denied", "Please grant access to your photo library to upload images.");
+      setAlertModal({
+        visible: true,
+        title: "Permission Denied",
+        message: "Please grant access to your photo library to upload images.",
+      });
       return;
     }
 
@@ -246,7 +256,11 @@ export default function AddProduct() {
   const handleColorImageSelect = async (colorName: string) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Denied", "Please grant access to your photo library.");
+      setAlertModal({
+        visible: true,
+        title: "Permission Denied",
+        message: "Please grant access to your photo library.",
+      });
       return;
     }
 
@@ -315,30 +329,54 @@ export default function AddProduct() {
   const handleApplyBulkStock = () => {
     const num = parseInt(bulkStock.replace(/[^0-9]/g, ""), 10);
     if (isNaN(num) || num < 0) {
-      Alert.alert("Invalid Quantity", "Please enter a valid non-negative number for bulk stock.");
+      setAlertModal({
+        visible: true,
+        title: "Invalid Quantity",
+        message: "Please enter a valid non-negative number for bulk stock.",
+      });
       return;
     }
     setVariant((prev) => prev.map((v) => ({ ...v, quantity: num })));
     setBulkStock("");
-    Alert.alert("Updated", `Set all variant quantities to ${num}.`);
+    setAlertModal({
+      visible: true,
+      title: "Updated",
+      message: `Set all variant quantities to ${num}.`,
+    });
   };
 
   // Step Validation & Navigation
   const handleNextFromStep1 = () => {
     if (!nameState.trim()) {
-      Alert.alert("Missing Name", "Please enter a product name.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Name",
+        message: "Please enter a product name.",
+      });
       return;
     }
     if (imageUris.length === 0) {
-      Alert.alert("Missing Images", "Please upload at least one product photo.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Images",
+        message: "Please upload at least one product photo.",
+      });
       return;
     }
     if (!descriptionState.trim()) {
-      Alert.alert("Missing Description", "Please enter a product description.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Description",
+        message: "Please enter a product description.",
+      });
       return;
     }
     if (selectedCategories.length === 0) {
-      Alert.alert("Missing Category", "Please select at least one product category.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Category",
+        message: "Please select at least one product category.",
+      });
       return;
     }
     setStep(2);
@@ -346,15 +384,27 @@ export default function AddProduct() {
 
   const handleNextFromStep2 = () => {
     if (selectedMaterials.length === 0) {
-      Alert.alert("Missing Material", "Please select at least one material.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Material",
+        message: "Please select at least one material.",
+      });
       return;
     }
     if (selectedColors.length === 0) {
-      Alert.alert("Missing Color", "Please select at least one color variant.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Color",
+        message: "Please select at least one color variant.",
+      });
       return;
     }
     if (selectedSizes.length === 0) {
-      Alert.alert("Missing Size", "Please select at least one size variant.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Size",
+        message: "Please select at least one size variant.",
+      });
       return;
     }
 
@@ -390,18 +440,30 @@ export default function AddProduct() {
   const handleAddProduct = async () => {
     const price = parseFloat(priceState);
     if (isNaN(price) || price <= 0) {
-      Alert.alert("Invalid Price", "Please enter a valid product price greater than $0.");
+      setAlertModal({
+        visible: true,
+        title: "Invalid Price",
+        message: "Please enter a valid product price greater than $0.",
+      });
       return;
     }
 
     const discount = parseInt(discountState.replace(/[^0-9]/g, ""), 10) || 0;
     if (discount < 0 || discount > 99) {
-      Alert.alert("Invalid Discount", "Discount must be between 0% and 99%.");
+      setAlertModal({
+        visible: true,
+        title: "Invalid Discount",
+        message: "Discount must be between 0% and 99%.",
+      });
       return;
     }
 
     if (variant.length === 0) {
-      Alert.alert("Missing Variants", "At least one product variant must be configured.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Variants",
+        message: "At least one product variant must be configured.",
+      });
       return;
     }
 
@@ -494,11 +556,24 @@ export default function AddProduct() {
         throw new Error("Failed to insert product inventory: " + varError.message);
       }
 
-      Alert.alert("Success", `"${nameState.trim()}" has been published to your store!`);
-      router.back();
+      setAlertModal({
+        visible: true,
+        title: "Success",
+        message: `"${nameState.trim()}" has been published to your store!`,
+        buttons: [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ],
+      });
     } catch (err: any) {
       console.error("Error creating product:", err);
-      Alert.alert("Submission Error", err.message || "Failed to add product. Please try again.");
+      setAlertModal({
+        visible: true,
+        title: "Submission Error",
+        message: err.message || "Failed to add product. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -1113,6 +1188,15 @@ export default function AddProduct() {
           </View>
         )}
       </ScrollView>
+
+      {/* Action Feedback Modal */}
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

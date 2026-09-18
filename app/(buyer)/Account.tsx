@@ -6,12 +6,12 @@ import {
   Image,
   Text,
   View,
-  Alert,
   TouchableOpacity,
   Modal,
   RefreshControl,
   ScrollView,
 } from "react-native";
+import CustomAlertModal, { ModalButton } from "@/components/common/CustomAlertModal";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { Colors } from "@/constants/Colors";
@@ -36,6 +36,12 @@ export default function Account() {
   const [email, setEmail] = useState("");
   const [profilePic, setProfilePic] = useState("");
   const [refreshing, setRefreshing] = useState(false); // State for refreshing
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
   const isFocused = useIsFocused();
 
   const fetchUserData = async () => {
@@ -105,7 +111,11 @@ export default function Account() {
       logout();
     } catch (error) {
       console.error("Logout Error:", error);
-      Alert.alert("Logout Error", "There was a problem logging out.");
+      setAlertModal({
+        visible: true,
+        title: "Logout Error",
+        message: "There was a problem logging out.",
+      });
     } finally {
       setLoggingOut(false);
     }
@@ -395,6 +405,14 @@ export default function Account() {
           </Modal>
         </ScrollView>
       )}
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </>
   );
 }

@@ -6,12 +6,12 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  Alert,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from "react-native";
+import CustomAlertModal, { ModalButton } from "@/components/common/CustomAlertModal";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { AntDesign, Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -37,6 +37,12 @@ export default function SignupScreen() {
   const [focusedInput, setFocusedInput] = useState<"username" | "email" | "password" | "confirm" | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
 
   const validateEmail = (val: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
@@ -131,23 +137,35 @@ export default function SignupScreen() {
         // 3. If session established immediately, log user in
         if (data.session) {
           await login({ id: userId, email: trimmedEmail });
-          Alert.alert("Welcome to Wagon!", `Account created successfully. Welcome, ${trimmedUsername}!`);
-          if (params.redirect) {
-            router.replace(params.redirect as any);
-          } else {
-            router.replace("/(tabs)");
-          }
+          setAlertModal({
+            visible: true,
+            title: "Welcome to Wagon!",
+            message: `Account created successfully. Welcome, ${trimmedUsername}!`,
+            buttons: [
+              {
+                text: "Get Started",
+                onPress: () => {
+                  if (params.redirect) {
+                    router.replace(params.redirect as any);
+                  } else {
+                    router.replace("/(tabs)");
+                  }
+                },
+              },
+            ],
+          });
         } else {
-          Alert.alert(
-            "Account Created",
-            "Your account has been created. Please check your email to verify your address, then sign in.",
-            [
+          setAlertModal({
+            visible: true,
+            title: "Account Created",
+            message: "Your account has been created. Please check your email to verify your address, then sign in.",
+            buttons: [
               {
                 text: "Go to Login",
                 onPress: () => router.replace("/LoginScreen"),
               },
-            ]
-          );
+            ],
+          });
         }
       }
     } catch (err) {
@@ -456,6 +474,14 @@ export default function SignupScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </ImageBackground>
   );
 }

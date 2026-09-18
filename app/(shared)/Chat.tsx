@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'expo-router';
-import { StyleSheet, Button, Text, View, TextInput, Alert, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { StyleSheet, Button, Text, View, TextInput, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import CustomAlertModal, { ModalButton } from '@/components/common/CustomAlertModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
@@ -28,6 +29,12 @@ export default function Chat() {
   const [receiverInfo, setReceiverInfo] = useState<User | null>(null);
   const receiver = '95699985-ed4f-491b-9e38-a34c82503ba7';
   const scrollViewRef = useRef<ScrollView>(null);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -55,7 +62,11 @@ export default function Chat() {
       }
       setReceiverInfo(data || null);
     } catch (error) {
-      Alert.alert('Error', 'Could not fetch receiver info');
+      setAlertModal({
+        visible: true,
+        title: 'Error',
+        message: 'Could not fetch receiver info',
+      });
     }
   };
 
@@ -74,18 +85,30 @@ export default function Chat() {
       }
       setMessages(data || []);
     } catch (error) {
-      Alert.alert('Error', 'Could not fetch messages');
+      setAlertModal({
+        visible: true,
+        title: 'Error',
+        message: 'Could not fetch messages',
+      });
     }
   };
 
   const handleSendMessage = async () => {
     if (message.trim() === '') {
-      Alert.alert('Error', 'Message cannot be empty');
+      setAlertModal({
+        visible: true,
+        title: 'Error',
+        message: 'Message cannot be empty',
+      });
       return;
     }
 
     if (!user) {
-      Alert.alert('Error', 'You must be logged in to send messages');
+      setAlertModal({
+        visible: true,
+        title: 'Error',
+        message: 'You must be logged in to send messages',
+      });
       return;
     }
 
@@ -100,7 +123,11 @@ export default function Chat() {
       setMessage('');
       fetchMessages(); // Refetch messages to include the newly sent message
     } catch (error) {
-      Alert.alert('Error', 'Could not send message');
+      setAlertModal({
+        visible: true,
+        title: 'Error',
+        message: 'Could not send message',
+      });
     }
   };
 
@@ -185,6 +212,14 @@ export default function Chat() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

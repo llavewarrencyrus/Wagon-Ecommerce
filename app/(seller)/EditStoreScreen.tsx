@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { updateStoreProfile, getStoreProfile } from '@/data/data';
+import CustomAlertModal, { ModalButton } from '@/components/common/CustomAlertModal';
 
 export default function EditStoreScreen() {
   const router = useRouter();
@@ -30,6 +30,12 @@ export default function EditStoreScreen() {
   const [pickupAddress, setPickupAddress] = useState('');
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
   const [storeBanner, setStoreBanner] = useState<string | null>(null);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: '', message: '' });
 
   useEffect(() => {
     if (storeProfile) {
@@ -44,7 +50,11 @@ export default function EditStoreScreen() {
   const handlePickImage = async (type: 'logo' | 'banner') => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Please allow media library access to upload photos.');
+      setAlertModal({
+        visible: true,
+        title: 'Permission Denied',
+        message: 'Please allow media library access to upload photos.',
+      });
       return;
     }
 
@@ -68,7 +78,11 @@ export default function EditStoreScreen() {
             .upload(filePath, decode(asset.base64), { contentType: 'image/png' });
 
           if (error) {
-            Alert.alert('Upload Error', error.message);
+            setAlertModal({
+              visible: true,
+              title: 'Upload Error',
+              message: error.message,
+            });
             return;
           }
 
@@ -78,7 +92,11 @@ export default function EditStoreScreen() {
             else setStoreBanner(urlData.publicUrl);
           }
         } catch (e: any) {
-          Alert.alert('Error', e.message || 'Image upload failed');
+          setAlertModal({
+            visible: true,
+            title: 'Error',
+            message: e.message || 'Image upload failed',
+          });
         }
       }
     }
@@ -86,7 +104,11 @@ export default function EditStoreScreen() {
 
   const handleSave = async () => {
     if (!storeName.trim()) {
-      Alert.alert('Validation', 'Please enter a store name.');
+      setAlertModal({
+        visible: true,
+        title: 'Validation',
+        message: 'Please enter a store name.',
+      });
       return;
     }
 
@@ -103,11 +125,19 @@ export default function EditStoreScreen() {
       });
 
       await refreshUserProfile();
-      Alert.alert('Success', 'Store profile updated successfully!');
-      router.back();
+      setAlertModal({
+        visible: true,
+        title: 'Success',
+        message: 'Store profile updated successfully!',
+        buttons: [{ text: 'OK', onPress: () => router.back() }],
+      });
     } catch (e: any) {
       console.error('Error saving store profile:', e);
-      Alert.alert('Error', e.message || 'Failed to save store profile.');
+      setAlertModal({
+        visible: true,
+        title: 'Error',
+        message: e.message || 'Failed to save store profile.',
+      });
     } finally {
       setLoading(false);
     }
@@ -202,6 +232,15 @@ export default function EditStoreScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Action Feedback Modal */}
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

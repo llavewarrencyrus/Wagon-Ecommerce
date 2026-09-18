@@ -10,7 +10,6 @@ import {
   Platform,
   UIManager,
   Linking,
-  Alert,
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { Ionicons, Feather, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";

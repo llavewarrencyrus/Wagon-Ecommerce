@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import CustomAlertModal, { ModalButton } from '@/components/common/CustomAlertModal';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
@@ -9,12 +10,22 @@ const { width } = Dimensions.get('window');
 
 const CurrentPasswordScreen = () => {
     const [currentPassword, setCurrentPassword] = useState('');
+    const [alertModal, setAlertModal] = useState<{
+        visible: boolean;
+        title: string;
+        message: string;
+        buttons?: ModalButton[];
+    }>({ visible: false, title: "", message: "" });
     const router = useRouter();
 
     const handleCurrentPasswordSubmit = async () => {
         // Basic validation
         if (!currentPassword) {
-            Alert.alert('Error', 'Please enter your current password.');
+            setAlertModal({
+                visible: true,
+                title: 'Error',
+                message: 'Please enter your current password.',
+            });
             return;
         }
 
@@ -23,12 +34,20 @@ const CurrentPasswordScreen = () => {
             const { data: { user }, error } = await supabase.auth.getUser();
 
             if (error || !user) {
-                Alert.alert('Error', 'User not found. Please log in again.');
+                setAlertModal({
+                    visible: true,
+                    title: 'Error',
+                    message: 'User not found. Please log in again.',
+                });
                 return;
             }
 
             if (!user.email) {
-                Alert.alert('Error', 'User email not found. Please log in again.');
+                setAlertModal({
+                    visible: true,
+                    title: 'Error',
+                    message: 'User email not found. Please log in again.',
+                });
                 return;
             }
 
@@ -39,14 +58,22 @@ const CurrentPasswordScreen = () => {
             });
 
             if (loginError) {
-                Alert.alert('Error', 'Current password is incorrect.');
+                setAlertModal({
+                    visible: true,
+                    title: 'Error',
+                    message: 'Current password is incorrect.',
+                });
                 return;
             }
 
             // Navigate to Change Password screen if the current password is correct
             router.push('/ChangePasswordScreen');
         } catch (error) {
-            Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+            setAlertModal({
+                visible: true,
+                title: 'Error',
+                message: 'An unexpected error occurred. Please try again.',
+            });
         }
     };
 
@@ -69,6 +96,13 @@ const CurrentPasswordScreen = () => {
                 </TouchableOpacity>
             </View>
 
+            <CustomAlertModal
+                visible={alertModal.visible}
+                title={alertModal.title}
+                message={alertModal.message}
+                buttons={alertModal.buttons}
+                onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+            />
         </View>
     );
 };

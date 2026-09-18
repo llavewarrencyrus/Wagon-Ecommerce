@@ -5,7 +5,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   Switch,
   ScrollView,
@@ -21,6 +20,7 @@ import { AddressProps } from "@/types/types";
 import { getAddress, saveAddress, getAddresses } from "@/data/data";
 import { Colors } from "@/constants/Colors";
 import Loading from "@/components/Loading";
+import CustomAlertModal, { ModalButton } from "@/components/common/CustomAlertModal";
 
 const PRESET_LABELS = ["Home", "Work", "Office", "Other"];
 
@@ -35,6 +35,12 @@ const AddEditAddressScreen: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -73,35 +79,63 @@ const AddEditAddressScreen: React.FC = () => {
       setTitle(data.title || "Home");
       setIsDefault(data.prefer === true);
     } else {
-      Alert.alert("Error", "Failed to load address details.");
-      router.back();
+      setAlertModal({
+        visible: true,
+        title: "Error",
+        message: "Failed to load address details.",
+        buttons: [{ text: "OK", onPress: () => router.back() }],
+      });
     }
   };
 
   const handleSave = async () => {
     // Validation
     if (!name.trim()) {
-      Alert.alert("Missing Field", "Please enter the recipient full name.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Field",
+        message: "Please enter the recipient full name.",
+      });
       return;
     }
     if (!phone.trim()) {
-      Alert.alert("Missing Field", "Please enter a valid contact phone number.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Field",
+        message: "Please enter a valid contact phone number.",
+      });
       return;
     }
     if (!houseNumberStreet.trim()) {
-      Alert.alert("Missing Field", "Please enter the house number, building, or street name.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Field",
+        message: "Please enter the house number, building, or street name.",
+      });
       return;
     }
     if (!barangay.trim()) {
-      Alert.alert("Missing Field", "Please enter the barangay.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Field",
+        message: "Please enter the barangay.",
+      });
       return;
     }
     if (!cityMunicipality.trim()) {
-      Alert.alert("Missing Field", "Please enter the city or municipality.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Field",
+        message: "Please enter the city or municipality.",
+      });
       return;
     }
     if (!province.trim()) {
-      Alert.alert("Missing Field", "Please enter the province.");
+      setAlertModal({
+        visible: true,
+        title: "Missing Field",
+        message: "Please enter the province.",
+      });
       return;
     }
 
@@ -128,10 +162,18 @@ const AddEditAddressScreen: React.FC = () => {
         const refreshed = await getAddresses(userId);
         setAddresses(refreshed);
       }
-      Alert.alert("Success", addressId ? "Address updated successfully." : "New address added successfully.");
-      router.back();
+      setAlertModal({
+        visible: true,
+        title: "Success",
+        message: addressId ? "Address updated successfully." : "New address added successfully.",
+        buttons: [{ text: "OK", onPress: () => router.back() }],
+      });
     } else {
-      Alert.alert("Error", "Failed to save address. Please check your connection and try again.");
+      setAlertModal({
+        visible: true,
+        title: "Error",
+        message: "Failed to save address. Please check your connection and try again.",
+      });
     }
   };
 
@@ -352,6 +394,15 @@ const AddEditAddressScreen: React.FC = () => {
           </TouchableOpacity>
         </ScrollView>
       )}
+
+      {/* Action Feedback Modal */}
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </KeyboardAvoidingView>
   );
 };

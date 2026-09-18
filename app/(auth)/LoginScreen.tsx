@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  Alert,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
   Modal,
 } from "react-native";
+import CustomAlertModal, { ModalButton } from "@/components/common/CustomAlertModal";
 import { Link, Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { AntDesign, Ionicons, Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -37,6 +37,12 @@ const LoginScreen = () => {
   const [forgotModalVisible, setForgotModalVisible] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [alertModal, setAlertModal] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({ visible: false, title: "", message: "" });
 
   const validateEmail = (val: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
@@ -102,11 +108,19 @@ const LoginScreen = () => {
   const handleForgotPassword = async () => {
     const targetEmail = forgotEmail.trim() || email.trim();
     if (!targetEmail) {
-      Alert.alert("Forgot Password", "Please enter your account email address.");
+      setAlertModal({
+        visible: true,
+        title: "Forgot Password",
+        message: "Please enter your account email address.",
+      });
       return;
     }
     if (!validateEmail(targetEmail)) {
-      Alert.alert("Forgot Password", "Please enter a valid email address.");
+      setAlertModal({
+        visible: true,
+        title: "Forgot Password",
+        message: "Please enter a valid email address.",
+      });
       return;
     }
 
@@ -114,17 +128,26 @@ const LoginScreen = () => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(targetEmail);
       if (error) {
-        Alert.alert("Reset Password", error.message);
+        setAlertModal({
+          visible: true,
+          title: "Reset Password",
+          message: error.message,
+        });
       } else {
-        Alert.alert(
-          "Email Sent",
-          `A password reset link has been sent to ${targetEmail}. Please check your inbox and spam folder.`
-        );
+        setAlertModal({
+          visible: true,
+          title: "Email Sent",
+          message: `A password reset link has been sent to ${targetEmail}. Please check your inbox and spam folder.`,
+        });
         setForgotModalVisible(false);
         setForgotEmail("");
       }
     } catch (err: any) {
-      Alert.alert("Error", "Unable to send password reset email. Please try again.");
+      setAlertModal({
+        visible: true,
+        title: "Error",
+        message: "Unable to send password reset email. Please try again.",
+      });
     } finally {
       setForgotLoading(false);
     }
@@ -397,6 +420,14 @@ const LoginScreen = () => {
           </View>
         </View>
       </Modal>
+
+      <CustomAlertModal
+        visible={alertModal.visible}
+        title={alertModal.title}
+        message={alertModal.message}
+        buttons={alertModal.buttons}
+        onClose={() => setAlertModal((prev) => ({ ...prev, visible: false }))}
+      />
     </ImageBackground>
   );
 };
