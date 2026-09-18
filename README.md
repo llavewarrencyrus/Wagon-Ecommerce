@@ -153,12 +153,12 @@ npx expo start
 
 ---
 
-## 👥 Demo & User Roles
+## 👥 Demo & User Roles (pass: 123456)
 
-| Role                  | Default / Demo Account       | Available Features                                                                            |
-| :-------------------- | :--------------------------- | :-------------------------------------------------------------------------------------------- |
-| **Customer / Buyer**  | Any newly registered account | Browse store, filter categories, manage cart, place orders, chat with seller                  |
-| **Seller / Merchant** | `seller@wagon.com`           | Sales analytics charts, product inventory manager, multi-step listing creator, merchant inbox |
+| Role                  | Default / Demo Account                           | Available Features                                                                            |
+| :-------------------- | :----------------------------------------------- | :-------------------------------------------------------------------------------------------- |
+| **Customer / Buyer**  | Any newly registered account / `buyer@wagon.com` | Browse store, filter categories, manage cart, place orders, chat with seller                  |
+| **Seller / Merchant** | `seller@wagon.com`                               | Sales analytics charts, product inventory manager, multi-step listing creator, merchant inbox |
 
 ---
 
